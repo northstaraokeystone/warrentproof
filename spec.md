@@ -759,8 +759,8 @@ keel, block, additive, iteration, milestone, procurement, propulsion, delivery
 ### RAZOR (5)
 ingest, cohort, compression, validation, signal
 
-### ShieldProof (5)
-contract, milestone, payment, anomaly, reconciliation
+### ShieldProof (7)
+contract, milestone, payment, variance, dashboard, anchor, anomaly
 
 ### Domain (5)
 domain_receipt, domain_simulation, domain_scenario, domain_validation, domain_volatility
@@ -828,6 +828,39 @@ gov-os defense simulate --cycles 100    # Defense domain simulation
 gov-os medicaid scenario PROVIDER_RING  # Run medicaid scenario
 gov-os validate --domain all            # Validate all domains
 gov-os list domains                     # List available domains
+```
+
+### ShieldProof Commands (v2.1)
+
+```bash
+gov-os shieldproof test                                    # Self-test
+gov-os shieldproof contract register --contractor NAME --amount USD --milestones JSON
+gov-os shieldproof contract list                           # List contracts
+gov-os shieldproof milestone add --contract-id ID --milestone-id ID --deliverable HASH
+gov-os shieldproof milestone verify --contract-id ID --milestone-id ID
+gov-os shieldproof payment release --contract-id ID --milestone-id ID
+gov-os shieldproof payment list                            # List payments
+gov-os shieldproof reconcile check --contract-id ID        # Check variance
+gov-os shieldproof reconcile report                        # Full variance report
+gov-os shieldproof dashboard export --format json          # Export dashboard
+gov-os shieldproof dashboard summary                       # Show summary
+gov-os shieldproof scenario run baseline                   # Run baseline scenario
+gov-os shieldproof scenario run stress --n-contracts 100   # Run stress scenario
+```
+
+### RAZOR Commands
+
+```bash
+gov-os razor --test                     # RAZOR quick test
+gov-os razor --gate api                 # Run RAZOR gate
+gov-os razor --cohorts                  # List cohorts
+```
+
+### Shipyard Commands
+
+```bash
+gov-os shipyard --status                # Program status
+gov-os shipyard --simulate              # Run simulation
 ```
 
 ---
