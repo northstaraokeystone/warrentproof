@@ -1,0 +1,82 @@
+{
+  "glyph_type": "anchor",
+  "id": "warrantproof-v1.0.0",
+  "ts": "2024-01-01T00:00:00Z",
+  "tenant_id": "warrantproof-simulation",
+  "version": "1.0.0",
+  "status": "SIMULATION ONLY",
+  "disclaimer": "THIS IS A SIMULATION. NOT REAL DoD DATA. FOR RESEARCH ONLY.",
+
+  "modules": {
+    "core": {
+      "file": "src/core.py",
+      "functions": ["dual_hash", "emit_receipt", "merkle", "cite"],
+      "stoprules": ["stoprule_hash_mismatch", "stoprule_invalid_receipt", "stoprule_uncited_data"]
+    },
+    "warrant": {
+      "file": "src/warrant.py",
+      "functions": ["generate_warrant", "quality_attestation", "milestone_warrant", "cost_variance_warrant"],
+      "receipt_types": ["warrant", "quality_attestation", "milestone", "cost_variance"]
+    },
+    "ledger": {
+      "file": "src/ledger.py",
+      "functions": ["ingest", "anchor_batch", "query_receipts", "verify_chain"],
+      "receipt_types": ["anchor", "ingest", "verification"]
+    },
+    "detect": {
+      "file": "src/detect.py",
+      "functions": ["scan", "classify_anomaly", "temporal_cluster", "cost_cascade_detect"],
+      "receipt_types": ["detection", "alert"]
+    },
+    "trace": {
+      "file": "src/trace.py",
+      "functions": ["build_lineage_graph", "find_root_decision", "find_approval_chain", "gap_detection"],
+      "receipt_types": ["lineage"]
+    },
+    "compress": {
+      "file": "src/compress.py",
+      "functions": ["compress_receipt_stream", "entropy_score", "pattern_coherence", "fraud_likelihood"],
+      "receipt_types": ["compression"]
+    },
+    "bridge": {
+      "file": "src/bridge.py",
+      "functions": ["translate_receipt", "verify_translation", "create_bridge_proof", "cross_branch_chain"],
+      "receipt_types": ["bridge", "chain"]
+    },
+    "sim": {
+      "file": "src/sim.py",
+      "functions": ["run_simulation", "simulate_cycle", "inject_fraud_pattern", "validate_scenario"],
+      "receipt_types": ["simulation", "violation"]
+    }
+  },
+
+  "scenarios": [
+    "BASELINE",
+    "SHIPYARD_STRESS",
+    "CROSS_BRANCH_INTEGRATION",
+    "FRAUD_DISCOVERY",
+    "REAL_TIME_OVERSIGHT",
+    "GODEL"
+  ],
+
+  "slo_thresholds": {
+    "warrant_generation_ms": 50,
+    "scan_per_1000_ms": 100,
+    "compression_legitimate_min": 0.80,
+    "compression_fraud_max": 0.50,
+    "detection_recall_min": 0.90,
+    "false_positive_max": 0.05
+  },
+
+  "citations_count": 22,
+  "branches_supported": ["Navy", "Army", "AirForce", "Marines", "SpaceForce", "CoastGuard"],
+
+  "gates": {
+    "t2h": "gate_t2h.sh",
+    "t24h": "gate_t24h.sh",
+    "t48h": "gate_t48h.sh"
+  },
+
+  "hash": "COMPUTE_ON_BUILD",
+  "verification": "If you can read this, the manifest is valid."
+}

@@ -1,0 +1,202 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WarrantProof Ledger Schema",
+  "description": "Schema for WarrantProof receipt ledger - SIMULATION ONLY",
+  "version": "1.0.0",
+  "disclaimer": "THIS IS A SIMULATION. NOT REAL DoD DATA. FOR RESEARCH ONLY.",
+
+  "hash_strategy": {
+    "algorithm": ["SHA256", "BLAKE3"],
+    "format": "sha256hex:blake3hex",
+    "description": "Dual-hash per CLAUDEME §8"
+  },
+
+  "merkle_strategy": {
+    "algorithm": "BLAKE3",
+    "tree_type": "binary",
+    "empty_hash": "dual_hash(b'empty')"
+  },
+
+  "receipt_types": {
+    "warrant": {
+      "description": "Cryptographic attestation for military transactions",
+      "required_fields": ["transaction_id", "branch", "approver", "amount_usd"],
+      "optional_fields": ["vendor", "program", "decision_lineage"],
+      "citation_required": true
+    },
+    "quality_attestation": {
+      "description": "Quality certification receipt",
+      "required_fields": ["item", "inspector", "certification"],
+      "optional_fields": ["branch", "decision_lineage"],
+      "citation_required": true
+    },
+    "milestone": {
+      "description": "Program milestone receipt",
+      "required_fields": ["program", "milestone", "status"],
+      "optional_fields": ["branch", "decision_lineage"],
+      "citation_required": true
+    },
+    "cost_variance": {
+      "description": "Cost overrun tracking receipt",
+      "required_fields": ["program", "baseline_usd", "actual_usd", "variance_pct"],
+      "optional_fields": ["branch", "severity", "decision_lineage"],
+      "citation_required": true
+    },
+    "anchor": {
+      "description": "Merkle anchor receipt",
+      "required_fields": ["merkle_root", "batch_size"],
+      "optional_fields": ["branch_scope", "receipt_types"],
+      "citation_required": false
+    },
+    "detection": {
+      "description": "Anomaly detection receipt",
+      "required_fields": ["anomaly_type", "severity", "confidence"],
+      "optional_fields": ["affected_receipts", "pattern_matched"],
+      "citation_required": true
+    },
+    "compression": {
+      "description": "Entropy-based analysis receipt",
+      "required_fields": ["compression_ratio", "entropy_score", "classification"],
+      "optional_fields": ["coherence_score", "fraud_likelihood"],
+      "citation_required": true
+    },
+    "lineage": {
+      "description": "Decision chain reconstruction receipt",
+      "required_fields": ["target_receipt", "root_decision", "approval_chain"],
+      "optional_fields": ["depth", "gaps_detected"],
+      "citation_required": false
+    },
+    "bridge": {
+      "description": "Cross-system translation receipt",
+      "required_fields": ["source_system", "target_system", "translation_proof"],
+      "optional_fields": ["information_preserved"],
+      "citation_required": false
+    },
+    "simulation": {
+      "description": "Scenario validation receipt",
+      "required_fields": ["scenario", "passed", "results"],
+      "optional_fields": ["criteria", "cycles_run"],
+      "citation_required": true
+    },
+    "anomaly": {
+      "description": "Stoprule violation receipt",
+      "required_fields": ["metric", "delta", "action"],
+      "optional_fields": ["classification", "baseline"],
+      "citation_required": false
+    },
+    "violation": {
+      "description": "Constraint violation receipt",
+      "required_fields": ["metric", "action"],
+      "optional_fields": ["delta", "classification"],
+      "citation_required": false
+    },
+    "alert": {
+      "description": "Real-time alert receipt",
+      "required_fields": ["anomaly_type", "severity"],
+      "optional_fields": ["confidence", "escalate"],
+      "citation_required": true
+    },
+    "ingest": {
+      "description": "Ledger ingestion receipt",
+      "required_fields": ["ingested_receipt_id", "ingested_receipt_type"],
+      "optional_fields": [],
+      "citation_required": false
+    },
+    "verification": {
+      "description": "Chain verification receipt",
+      "required_fields": ["verified", "receipt_count"],
+      "optional_fields": ["errors", "merkle_root"],
+      "citation_required": false
+    }
+  },
+
+  "base_receipt_schema": {
+    "type": "object",
+    "required": ["receipt_type", "ts", "tenant_id", "payload_hash"],
+    "properties": {
+      "receipt_type": {
+        "type": "string",
+        "description": "Type of receipt"
+      },
+      "ts": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO8601 timestamp"
+      },
+      "tenant_id": {
+        "type": "string",
+        "default": "warrantproof-simulation",
+        "description": "Tenant identifier for isolation"
+      },
+      "payload_hash": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}:[a-f0-9]{64}$",
+        "description": "SHA256:BLAKE3 dual-hash"
+      },
+      "simulation_flag": {
+        "type": "string",
+        "const": "THIS IS A SIMULATION. NOT REAL DoD DATA. FOR RESEARCH ONLY.",
+        "description": "Required disclaimer"
+      },
+      "citation": {
+        "type": "object",
+        "properties": {
+          "source": { "type": "string" },
+          "url": { "type": "string", "format": "uri" },
+          "detail": { "type": "string" },
+          "date": { "type": "string" }
+        }
+      }
+    }
+  },
+
+  "branch_enum": [
+    "Navy",
+    "Army",
+    "AirForce",
+    "Marines",
+    "SpaceForce",
+    "CoastGuard"
+  ],
+
+  "severity_enum": [
+    "low",
+    "medium",
+    "high",
+    "critical"
+  ],
+
+  "classification_enum": [
+    "legitimate",
+    "suspicious",
+    "fraudulent"
+  ],
+
+  "anomaly_type_enum": [
+    "ghost_vendor",
+    "time_anomaly",
+    "cost_cascade",
+    "cert_fraud",
+    "inventory_ghost",
+    "compression_failure"
+  ],
+
+  "storage": {
+    "format": "jsonl",
+    "file": "receipts.jsonl",
+    "append_only": true,
+    "description": "Append-only JSON lines format"
+  },
+
+  "slo_thresholds": {
+    "warrant_generation_ms": 50,
+    "scan_per_1000_ms": 100,
+    "translation_ms": 200,
+    "lineage_construction_ms": 500,
+    "compression_legitimate_min": 0.80,
+    "compression_fraud_max": 0.50,
+    "detection_recall_min": 0.90,
+    "false_positive_max": 0.05,
+    "lineage_completeness_min": 0.95
+  }
+}
