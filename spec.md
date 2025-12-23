@@ -127,7 +127,7 @@ gov-os/
 ├── data/                       # Data and citations
 │   └── citations/
 │
-└── gate_*.sh                   # Execution gates (t2h, t24h, t48h)
+└── gate.sh                     # Unified execution gate runner
 ```
 
 ---
@@ -417,11 +417,20 @@ Each domain provides:
 
 ## Execution Gates
 
-| Gate | Requirement | Script |
+All gates are run via the unified `gate.sh` script:
+
+```bash
+./gate.sh t2h      # T+2h skeleton gate
+./gate.sh t24h     # T+24h MVP gate (includes t2h)
+./gate.sh t48h     # T+48h hardened gate (includes t24h)
+./gate.sh all      # Run all gates
+```
+
+| Gate | Requirement | Checks |
 |------|-------------|--------|
-| T+2h | Skeleton working | `gate_t2h.sh` |
-| T+24h | MVP complete | `gate_t24h.sh` |
-| T+48h | Hardened | `gate_t48h.sh` |
+| T+2h | Skeleton working | Core files, CLI, disclaimers, citations, all modules |
+| T+24h | MVP complete | Tests, smoke tests, simulations, domain validation |
+| T+48h | Hardened | Full test suite, scenarios, memory check |
 
 ---
 
