@@ -1,0 +1,45 @@
+{
+  "glyph_type": "anchor",
+  "id": "razor-v1.0.0",
+  "ts": "2025-12-23T00:00:00Z",
+  "project": "Project RAZOR",
+  "version": "1.0.0",
+  "description": "Kolmogorov Validation Engine for Federal Procurement Fraud Detection",
+  "paradigm": {
+    "old": "Physics-theater: ZK-SNARKs, RAF networks, Bekenstein bounds",
+    "new": "Minimalist brutalism: Compression ratio IS the proof",
+    "insight": "Fraud = artificial order. Order compresses. Chaos resists."
+  },
+  "cohorts": [
+    {"name": "fat_leonard", "fraud_type": "copy_paste", "expected_z": "< -2.5"},
+    {"name": "transdigm", "fraud_type": "value_decoupling", "expected_z": "< -1.5"},
+    {"name": "boeing", "fraud_type": "template_fraud", "expected_z": "< -1.8"}
+  ],
+  "modules": {
+    "core.py": "CLAUDEME-compliant foundation with RAZOR constants",
+    "cohorts.py": "Historical fraud cohort definitions",
+    "ingest.py": "USASpending.gov API client",
+    "physics.py": "Kolmogorov complexity via compression",
+    "validate.py": "Statistical signal detection"
+  },
+  "gates": {
+    "api": "USASpending.gov connectivity",
+    "compression": "Compression algorithm validation",
+    "validate": "Statistical pipeline smoke test"
+  },
+  "thresholds": {
+    "CR_THRESHOLD_LOW": 0.30,
+    "CR_THRESHOLD_HIGH": 0.70,
+    "Z_SCORE_THRESHOLD": -2.0,
+    "ALPHA_LEVEL": 0.05
+  },
+  "killed_from_v3": [
+    "zkp.py (ZK-SNARKs)",
+    "raf.py (RAF networks)",
+    "das.py (Data Availability Sampling)",
+    "adversarial.py (PGD attacks)",
+    "holographic.py (Bekenstein bounds)"
+  ],
+  "status": "SHIPPED",
+  "signature": "COMPUTE_ON_BUILD"
+}

@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RAZOR Receipt Schema",
+  "description": "Schema for RAZOR Kolmogorov Validation Engine receipts",
+  "version": "1.0.0",
+  "hash_strategy": {
+    "algorithm": ["SHA256", "BLAKE3"],
+    "format": "sha256hex:blake3hex"
+  },
+  "tenant_id": "project-razor",
+  "definitions": {
+    "base_receipt": {
+      "type": "object",
+      "required": ["receipt_type", "ts", "tenant_id", "payload_hash"],
+      "properties": {
+        "receipt_type": {
+          "type": "string",
+          "description": "Type of receipt"
+        },
+        "ts": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO8601 timestamp"
+        },
+        "tenant_id": {
+          "type": "string",
+          "default": "project-razor"
+        },
+        "payload_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}:[a-f0-9]{64}$",
+          "description": "SHA256:BLAKE3 dual hash"
+        }
+      }
+    },
+    "ingest_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/base_receipt" },
+        {
+          "properties": {
+            "receipt_type": { "const": "ingest" },
+            "url": { "type": "string", "format": "uri" },
+            "status_code": { "type": "integer" },
+            "records_fetched": { "type": "integer" },
+            "page": { "type": "integer" },
+            "cohort_name": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "cohort_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/base_receipt" },
+        {
+          "properties": {
+            "receipt_type": { "const": "cohort" },
+            "cohort_name": { "type": "string" },
+            "total_records": { "type": "integer" },
+            "api_calls": { "type": "integer" },
+            "duration_seconds": { "type": "number" }
+          }
+        }
+      ]
+    },
+    "complexity_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/base_receipt" },
+        {
+          "properties": {
+            "receipt_type": { "const": "complexity" },
+            "award_id": { "type": "string" },
+            "cr_zlib": { "type": "number", "minimum": 0, "maximum": 2 },
+            "cr_lzma": { "type": "number", "minimum": 0, "maximum": 2 },
+            "cr_bz2": { "type": "number", "minimum": 0, "maximum": 2 },
+            "shannon_entropy": { "type": "number", "minimum": 0 },
+            "valid": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "signal_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/base_receipt" },
+        {
+          "properties": {
+            "receipt_type": { "const": "signal" },
+            "signal_detected": { "type": "boolean" },
+            "signal_strength": {
+              "type": "string",
+              "enum": ["none", "weak", "moderate", "strong"]
+            },
+            "mean_z_score": { "type": "number" },
+            "p_value": { "type": "number", "minimum": 0, "maximum": 1 },
+            "cohens_d": { "type": "number" },
+            "fraud_n": { "type": "integer" },
+            "control_n": { "type": "integer" }
+          }
+        }
+      ]
+    },
+    "anomaly_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/base_receipt" },
+        {
+          "properties": {
+            "receipt_type": { "const": "anomaly" },
+            "metric": { "type": "string" },
+            "delta": { "type": "number" },
+            "action": {
+              "type": "string",
+              "enum": ["alert", "escalate", "halt", "reject"]
+            },
+            "classification": {
+              "type": "string",
+              "enum": ["drift", "degradation", "violation", "deviation"]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
