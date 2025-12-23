@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ShieldProof v2.0 Ledger Schema",
+  "description": "Minimal viable truth for defense accountability",
+  "version": "2.0.0",
+
+  "hash_strategy": {
+    "algorithm": ["SHA256", "BLAKE3"],
+    "format": "sha256hex:blake3hex",
+    "description": "Dual-hash per CLAUDEME §8"
+  },
+
+  "merkle_strategy": {
+    "algorithm": "BLAKE3",
+    "tree_type": "binary",
+    "empty_hash": "dual_hash(b'empty')"
+  },
+
+  "receipt_types": {
+    "contract": {
+      "description": "Fixed-price contract registration",
+      "required_fields": ["contract_id", "contractor", "amount_fixed", "milestones", "terms_hash"],
+      "optional_fields": []
+    },
+    "milestone": {
+      "description": "Deliverable tracking and verification",
+      "required_fields": ["contract_id", "milestone_id", "status"],
+      "optional_fields": ["deliverable_hash", "verifier_id", "verification_ts"]
+    },
+    "payment": {
+      "description": "Payment release on verification",
+      "required_fields": ["contract_id", "milestone_id", "amount", "payment_hash", "released_at"],
+      "optional_fields": []
+    },
+    "anomaly": {
+      "description": "Stoprule violation receipt",
+      "required_fields": ["metric", "delta", "action"],
+      "optional_fields": ["classification", "baseline"]
+    }
+  },
+
+  "milestone_states": ["PENDING", "DELIVERED", "VERIFIED", "PAID", "DISPUTED"],
+
+  "base_receipt_schema": {
+    "type": "object",
+    "required": ["receipt_type", "ts", "tenant_id", "payload_hash"],
+    "properties": {
+      "receipt_type": {
+        "type": "string",
+        "enum": ["contract", "milestone", "payment", "anomaly"]
+      },
+      "ts": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO8601 timestamp"
+      },
+      "tenant_id": {
+        "type": "string",
+        "default": "shieldproof",
+        "description": "Tenant identifier"
+      },
+      "payload_hash": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}:[a-f0-9]{64}$",
+        "description": "SHA256:BLAKE3 dual-hash"
+      }
+    }
+  },
+
+  "slo_thresholds": {
+    "receipt_latency_ms": 10.0,
+    "verify_latency_ms": 50.0,
+    "dashboard_refresh_s": 60.0
+  },
+
+  "storage": {
+    "format": "jsonl",
+    "file": "receipts.jsonl",
+    "append_only": true
+  }
+}

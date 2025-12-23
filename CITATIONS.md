@@ -225,4 +225,57 @@ CITATIONS = {
 
 ---
 
+## Shipyard Module Citations
+
+### TRUMP_2025: Presidential Announcement
+- **Title:** "Shipbuilding Program Announcement"
+- **URL:** https://www.whitehouse.gov
+- **Key Data:** $200B shipbuilding program, 20-25 Trump-class battleships
+- **Date:** 2025-12-22
+- **Constants:** TRUMP_CLASS_PROGRAM_COST_B, TRUMP_CLASS_SHIP_COUNT
+
+### SPACEX_2025: SpaceX Starfactory
+- **Title:** "SpaceX Starfactory Production Update"
+- **URL:** https://www.spacex.com
+- **Key Data:** 1-week production cadence with 8 parallel mega-bays
+- **Date:** 2025
+- **Constants:** STARFACTORY_CADENCE_WEEKS, STARFACTORY_MEGA_BAYS
+
+### UMAINE_2025: University of Maine LFAM
+- **Title:** "Large Format Additive Manufacturing Research"
+- **URL:** https://composites.umaine.edu
+- **Key Data:** 40-50% time savings, 40% weight reduction on hull sections
+- **Date:** 2025
+- **Constants:** LFAM_TIME_SAVINGS_PCT, LFAM_WEIGHT_SAVINGS_PCT
+
+### NAVY_2025: NAVSEA Additive Manufacturing
+- **Title:** "NAVSEA Additive Manufacturing Report"
+- **URL:** https://www.navsea.navy.mil
+- **Key Data:** 35% savings on additive spare parts
+- **Date:** 2025
+- **Constants:** NAVY_ADDITIVE_SPARES_SAVINGS
+
+### COMAU_2024: MR4Weld Mobile Welder
+- **Title:** "COMAU MR4Weld Product Launch"
+- **URL:** https://www.comau.com
+- **Key Data:** 30% efficiency gain with 100% traceability
+- **Date:** 2024
+- **Constants:** COMAU_WELD_EFFICIENCY_GAIN
+
+### NRC_2025: NuScale SMR Approval
+- **Title:** "NRC NuScale SMR Approval"
+- **URL:** https://www.nrc.gov
+- **Key Data:** 77 MWe small modular reactor approved for marine applications
+- **Date:** 2025
+- **Constants:** NUSCALE_POWER_MWE
+
+### DAMEN_CEAD_2025: 3D Printed Workboat
+- **Title:** "CEAD/Damen 3D Printed Workboat"
+- **URL:** https://ceadgroup.com
+- **Key Data:** Full HDPE workboat hulls using LFAM technology
+- **Date:** 2025
+- **Constants:** MARINE_CERTIFIED_MATERIALS
+
+---
+
 **⚠️ THIS IS A SIMULATION. ALL DATA FROM PUBLIC SOURCES ONLY. ⚠️**

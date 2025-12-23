@@ -298,13 +298,24 @@ gov-os/
 │   ├── shipyard/                       # Trump-class battleship module
 │   │   └── ...
 │   │
-│   └── razor/                          # Kolmogorov validation engine
-│       └── ...
+│   ├── razor/                          # Kolmogorov validation engine
+│   │   └── ...
+│   │
+│   └── shieldproof/                    # Defense contract accountability (v2.0)
+│       ├── __init__.py                 # Package exports
+│       ├── spec.md                     # Module specification
+│       ├── core.py                     # Foundation: dual_hash, emit_receipt, merkle
+│       ├── contract.py                 # Fixed-price contract registration
+│       ├── milestone.py                # Deliverable tracking and verification
+│       ├── payment.py                  # Payment release on verified milestones
+│       ├── reconcile.py                # Automated waste detection
+│       └── dashboard.py                # Public audit trail dashboard
 │
 ├── schemas/                            # Ledger schema definitions
 │   ├── ledger_schema_domains.json
 │   ├── ledger_schema_razor.json
-│   └── ledger_schema_shipyard.json
+│   ├── ledger_schema_shipyard.json
+│   └── ledger_schema_shieldproof.json  # ShieldProof receipt schema
 │
 ├── tests/                              # Unified test suite
 │   ├── conftest.py
@@ -325,10 +336,22 @@ gov-os/
 │   ├── test_modules_warrant.py         # Warrant module tests
 │   ├── test_modules_lab.py             # Lab module tests
 │   ├── test_scenarios_cross_domain.py  # Cross-domain tests
+│   ├── test_shieldproof_core.py        # ShieldProof core tests
+│   ├── test_shieldproof_contract.py    # ShieldProof contract tests
+│   ├── test_shieldproof_milestone.py   # ShieldProof milestone tests
+│   ├── test_shieldproof_payment.py     # ShieldProof payment tests
+│   ├── test_shieldproof_reconcile.py   # ShieldProof reconcile tests
+│   ├── test_shieldproof_dashboard.py   # ShieldProof dashboard tests
 │   └── ...
 │
-└── data/                               # Data and citations
-    └── citations/
+├── scripts/                            # Execution scripts
+│   └── shieldproof/                    # ShieldProof gate scripts
+│       ├── gate_t2h.sh                 # T+2h skeleton gate
+│       ├── gate_t24h.sh                # T+24h MVP gate
+│       └── gate_t48h.sh                # T+48h hardened gate
+│
+├── shieldproof_cli.py                  # ShieldProof standalone CLI
+└── shieldproof_receipts.jsonl          # ShieldProof ledger file
 ```
 
 ---
@@ -366,7 +389,7 @@ ALL_MODULES = [
     "doge", "spend", "green", "benefit",
     "vote", "claim", "safety", "coin",
     "origin", "graft", "warrant", "lab",
-    "defense", "medicaid"
+    "defense", "medicaid", "shieldproof"
 ]
 ```
 
@@ -590,6 +613,67 @@ Every module in `modules/` implements this interface:
 - `protect_whistleblower(report)` - ZK attestation protecting identity
 - `measure_staffing_impact(case_id)` - Measure staffing changes impact
 
+### shieldproof/ (ShieldProof v2.0)
+
+**Purpose:** Minimal viable truth for defense contract accountability. Payment follows verification.
+
+**Philosophy:** "One receipt. One milestone. One truth."
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| TENANT_ID | "shieldproof" | Module identifier |
+| VERSION | "2.0.0" | Current version |
+| RECEIPT_TYPES | contract, milestone, payment | Core receipt types |
+| LEDGER_PATH | shieldproof_receipts.jsonl | Append-only ledger |
+
+**Receipt Types:**
+
+| Type | Purpose | Key Fields |
+|------|---------|------------|
+| `contract` | Register fixed-price contract | contract_id, contractor, amount_fixed, milestones[], terms_hash |
+| `milestone` | Track deliverable verification | contract_id, milestone_id, deliverable_hash, status, verifier_id |
+| `payment` | Release payment on verification | contract_id, milestone_id, amount, payment_hash, released_at |
+
+**Milestone States:**
+
+```
+PENDING → DELIVERED → VERIFIED → PAID
+                  ↘ DISPUTED
+```
+
+**Key Functions:**
+- `register_contract(contractor, amount, milestones, terms)` - Register fixed-price contract
+- `submit_deliverable(contract_id, milestone_id, deliverable)` - Submit milestone deliverable
+- `verify_milestone(contract_id, milestone_id, verifier_id, passed)` - Verify milestone
+- `release_payment(contract_id, milestone_id)` - Release payment ONLY on VERIFIED milestones
+- `reconcile_contract(contract_id)` - Compare spend vs deliverables
+- `generate_summary()` - Public dashboard summary
+
+**Stoprules:**
+
+| Rule | Trigger | Action |
+|------|---------|--------|
+| stoprule_duplicate_contract | contract_id exists | Emit anomaly |
+| stoprule_invalid_amount | amount ≤ 0 or milestones don't sum | Emit anomaly |
+| stoprule_unverified_milestone | payment on non-VERIFIED | HALT execution |
+| stoprule_overpayment | paid > verified amount | Emit anomaly |
+
+**SLOs:**
+
+| Operation | Target |
+|-----------|--------|
+| Receipt emission | ≤ 10ms |
+| Verification | ≤ 50ms |
+| Dashboard refresh | ≤ 60s |
+
+**What Was Killed (v1.0 → v2.0):**
+- ZK-SNARKs (latency suicide)
+- PQC signatures (overkill)
+- Entropy detection (physics theater)
+- RAF cycles (no predictive power)
+- Holographic bounds (Bekenstein applies to horizons, not budgets)
+- Microsecond latency targets (unrealistic)
+
 ---
 
 ## Receipt Types (82+ Total)
@@ -647,6 +731,9 @@ keel, block, additive, iteration, milestone, procurement, propulsion, delivery
 
 ### RAZOR (5)
 ingest, cohort, compression, validation, signal
+
+### ShieldProof (5)
+contract, milestone, payment, anomaly, reconciliation
 
 ### Domain (5)
 domain_receipt, domain_simulation, domain_scenario, domain_validation, domain_volatility
@@ -823,6 +910,7 @@ When L4 >= 99.9% and L4 feeds back to L0:
 | 5.0.0 | 2024-12-23 | Unification: Single cohesive platform with domain modules |
 | 5.1.0 | 2024-12-23 | Temporal: Decay physics, resistance detection, cross-domain contagion |
 | 6.0.0 | 2024-12-23 | ProofChain: 12 modules unified, contagion, gate, loop, zk |
+| 6.1.0 | 2024-12-23 | ShieldProof v2.0: Defense contract accountability, "One receipt. One milestone. One truth." |
 
 ---
 

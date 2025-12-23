@@ -4,7 +4,7 @@ WarrantProof Shipyard Constants - Verified Values with Citations
 THIS IS A SIMULATION FOR ACADEMIC RESEARCH PURPOSES ONLY
 
 All constants are derived from public sources with citation keys.
-Each citation key corresponds to an entry in data/citations/shipbuilding.json.
+Each citation key corresponds to an entry in CITATIONS.md (Shipyard Module Citations section).
 
 The physics: Entropy compression ratio IS the efficiency metric.
 - Traditional shipbuilding: entropy accumulates until overruns discovered
@@ -150,7 +150,7 @@ CONTRACT_ENTROPY = {
 MAX_CHANGE_ORDERS_BEFORE_REVIEW = 5
 CHANGE_ORDER_OVERRUN_THRESHOLD = 0.10  # 10% cumulative triggers review
 
-# === CITATION KEYS (must exist in shipbuilding.json) ===
+# === CITATION KEYS (documented in CITATIONS.md) ===
 CITATION_KEYS = [
     "TRUMP_2025",
     "GAO_2024",
