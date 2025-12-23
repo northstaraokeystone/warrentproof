@@ -1,5 +1,5 @@
 """
-WarrantProof Holographic Module - Boundary-Only Fraud Detection
+WarrantProof Holographic Module - Boundary-Only Fraud Detection with Data Availability
 
 ⚠️ SIMULATION ONLY - NOT REAL DoD DATA - FOR RESEARCH ONLY ⚠️
 
@@ -8,21 +8,28 @@ Based on the holographic principle (Bekenstein bound): volume entropy
 encodes on boundary. Detect fraud from O(1) boundary check without
 scanning O(N) volume.
 
+OMEGA v3 Enhancement:
+Data availability sampling via erasure coding. Per OMEGA:
+"Full data availability guarantee via random sampling."
+Integrates DAS module for cryptographic availability proofs.
+
 Physics Foundation:
 - Holographic principle: volume entropy ≤ boundary area
 - Ledger = volume, Merkle root = boundary
 - Fraud anywhere in volume ripples the horizon (changes root)
 - bits_required ≈ area × log(1/p_detect) ≤ 2 bits/receipt
+- Data availability: Pr(detect_unavailable) > 1 - 2^(-sample_count)
 
 SLOs:
 - Detection probability p > 0.9999 from boundary
 - Bits per receipt ≤ 2 (holographic compression bound)
 - Fraud localization in O(log N) time
+- Data availability confidence > 99% with 10% sampling
 """
 
 import math
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, List, Dict, Any, Tuple
 
 import numpy as np
 
@@ -32,10 +39,21 @@ from .core import (
     HOLOGRAPHIC_BITS_PER_RECEIPT,
     HOLOGRAPHIC_DETECTION_PROBABILITY_MIN,
     HOLOGRAPHIC_LOCALIZATION_COMPLEXITY,
+    DATA_AVAILABILITY_SAMPLE_RATE,
     dual_hash,
     emit_receipt,
     merkle,
     StopRuleException,
+)
+
+# OMEGA v3: Import DAS for data availability
+from .das import (
+    encode_with_erasure,
+    sample_chunks,
+    verify_availability,
+    detect_erasure,
+    light_client_audit,
+    ErasureEncodedData,
 )
 
 
@@ -349,7 +367,325 @@ def emit_holographic_receipt(
     }, to_stdout=False)
 
 
+# === OMEGA v3: DATA AVAILABILITY SAMPLING ===
+
+@dataclass
+class HolographicState:
+    """
+    Combined holographic and data availability state.
+    Per OMEGA: Boundary detection + availability guarantees.
+    """
+    merkle_root: str = ""
+    erasure_encoded: Optional[ErasureEncodedData] = None
+    availability_verified: bool = False
+    availability_confidence: float = 0.0
+    last_sample_indices: List[int] = field(default_factory=list)
+
+
+def create_holographic_state(
+    receipts: List[Dict[str, Any]],
+    erasure_factor: int = 2
+) -> HolographicState:
+    """
+    Create holographic state with erasure encoding.
+    Combines Merkle root with data availability guarantees.
+
+    Args:
+        receipts: List of receipts to encode
+        erasure_factor: Erasure coding expansion factor (default 2x)
+
+    Returns:
+        HolographicState with Merkle root and erasure encoding
+    """
+    # Compute Merkle root (boundary encoding)
+    merkle_root = holographic_encode(receipts)
+
+    # Erasure encode for data availability
+    import json
+    data_bytes = json.dumps(receipts, sort_keys=True).encode()
+    erasure_encoded = encode_with_erasure(data_bytes, expansion_factor=erasure_factor)
+
+    return HolographicState(
+        merkle_root=merkle_root,
+        erasure_encoded=erasure_encoded,
+        availability_verified=False,
+        availability_confidence=0.0,
+    )
+
+
+def verify_data_availability(
+    state: HolographicState,
+    sample_rate: float = DATA_AVAILABILITY_SAMPLE_RATE
+) -> Tuple[bool, float, List[int]]:
+    """
+    Verify data availability via random sampling.
+    Per OMEGA: "Full data availability guarantee via random sampling."
+
+    Args:
+        state: HolographicState with erasure encoding
+        sample_rate: Fraction of chunks to sample (default 10%)
+
+    Returns:
+        Tuple of (available, confidence, sampled_indices)
+    """
+    if not state.erasure_encoded:
+        return False, 0.0, []
+
+    # Perform light client audit
+    audit_result = light_client_audit(
+        state.erasure_encoded,
+        sample_rate=sample_rate
+    )
+
+    available = audit_result.get("available", False)
+    confidence = audit_result.get("confidence", 0.0)
+    sampled_indices = audit_result.get("sampled_indices", [])
+
+    # Update state
+    state.availability_verified = available
+    state.availability_confidence = confidence
+    state.last_sample_indices = sampled_indices
+
+    return available, confidence, sampled_indices
+
+
+def holographic_detect_with_da(
+    current_root: str,
+    expected_root: Optional[str] = None,
+    root_history: Optional[MerkleRootHistory] = None,
+    state: Optional[HolographicState] = None
+) -> Dict[str, Any]:
+    """
+    Enhanced holographic detection with data availability verification.
+    Combines boundary fraud detection with availability guarantees.
+
+    Args:
+        current_root: Current Merkle root
+        expected_root: Optional expected root for syndrome check
+        root_history: Optional history for statistical detection
+        state: Optional HolographicState for DA verification
+
+    Returns:
+        Detection result dict with DA status
+    """
+    # Base holographic detection
+    result = holographic_detect(current_root, expected_root, root_history)
+
+    # Add data availability verification
+    if state:
+        available, confidence, indices = verify_data_availability(state)
+
+        result["data_availability"] = {
+            "verified": available,
+            "confidence": round(confidence, 4),
+            "samples_checked": len(indices),
+            "sample_rate": DATA_AVAILABILITY_SAMPLE_RATE,
+        }
+
+        # If data unavailable, this is also fraud indicator
+        if not available:
+            result["fraud_detected"] = True
+            result["detection_method"] = result.get("detection_method", "data_unavailable")
+            result["confidence"] = max(result.get("confidence", 0), 0.85)
+            result["data_availability"]["erasure_detected"] = True
+
+    return result
+
+
+def detect_selective_withholding(
+    state: HolographicState,
+    suspect_indices: List[int]
+) -> Dict[str, Any]:
+    """
+    Detect selective data withholding.
+    When specific receipts are withheld to hide fraud.
+
+    Args:
+        state: HolographicState with erasure encoding
+        suspect_indices: Indices suspected of being withheld
+
+    Returns:
+        Withholding detection result
+    """
+    if not state.erasure_encoded:
+        return {"error": "No erasure encoding available"}
+
+    # Check specific indices
+    detection = detect_erasure(state.erasure_encoded, suspect_indices)
+
+    # If suspect indices have erasures, likely selective withholding
+    result = {
+        "selective_withholding_suspected": detection.get("erasure_detected", False),
+        "suspect_indices": suspect_indices,
+        "erasure_pattern": detection.get("erasure_pattern", []),
+        "reconstruction_possible": detection.get("recoverable", False),
+    }
+
+    return result
+
+
+def reconstruct_from_erasure(
+    state: HolographicState,
+    missing_indices: List[int]
+) -> Optional[bytes]:
+    """
+    Attempt to reconstruct missing data from erasure coding.
+    Returns None if reconstruction fails (too much data missing).
+
+    Args:
+        state: HolographicState with erasure encoding
+        missing_indices: Indices of missing chunks
+
+    Returns:
+        Reconstructed data bytes or None
+    """
+    if not state.erasure_encoded:
+        return None
+
+    # Check if reconstruction is possible
+    max_recoverable = len(state.erasure_encoded.chunks) // state.erasure_encoded.expansion_factor
+
+    if len(missing_indices) > max_recoverable:
+        return None
+
+    # Simulate reconstruction (in production, use real Reed-Solomon)
+    available_chunks = [
+        chunk for i, chunk in enumerate(state.erasure_encoded.chunks)
+        if i not in missing_indices
+    ]
+
+    if len(available_chunks) >= len(state.erasure_encoded.chunks) // state.erasure_encoded.expansion_factor:
+        # Reconstruction would succeed
+        return state.erasure_encoded.original_data
+
+    return None
+
+
+def emit_holographic_da_receipt(
+    state: HolographicState,
+    detection_result: Optional[Dict[str, Any]] = None,
+    num_receipts: int = 0
+) -> Dict[str, Any]:
+    """
+    Emit holographic receipt with data availability attestation.
+
+    Args:
+        state: HolographicState
+        detection_result: Detection result
+        num_receipts: Number of receipts
+
+    Returns:
+        holographic_da_receipt dict
+    """
+    if detection_result is None:
+        detection_result = holographic_detect_with_da(
+            state.merkle_root,
+            state=state
+        )
+
+    bits_used = bits_required(max(1, num_receipts))
+
+    receipt_data = {
+        "tenant_id": TENANT_ID,
+        "merkle_root": state.merkle_root,
+        "fraud_detected": detection_result.get("fraud_detected", False),
+        "detection_method": detection_result.get("detection_method", "none"),
+        "detection_probability": detection_result.get("detection_probability", 0),
+        "bits_used": round(bits_used, 2),
+        "bekenstein_bound_respected": verify_bekenstein_bound(max(1, num_receipts), bits_used),
+        "simulation_flag": DISCLAIMER,
+    }
+
+    # Add data availability attestation
+    da_info = detection_result.get("data_availability", {})
+    if da_info:
+        receipt_data["data_availability"] = {
+            "verified": da_info.get("verified", False),
+            "confidence": da_info.get("confidence", 0),
+            "sample_rate": DATA_AVAILABILITY_SAMPLE_RATE,
+            "omega_citation": "OMEGA: Full data availability guarantee via random sampling",
+        }
+
+        # Add erasure encoding metadata if available
+        if state.erasure_encoded:
+            receipt_data["erasure_encoding"] = {
+                "expansion_factor": state.erasure_encoded.expansion_factor,
+                "chunk_count": len(state.erasure_encoded.chunks),
+                "original_size": len(state.erasure_encoded.original_data),
+            }
+
+    return emit_receipt("holographic_da", receipt_data, to_stdout=False)
+
+
+def holographic_audit(
+    receipts: List[Dict[str, Any]],
+    expected_root: Optional[str] = None,
+    root_history: Optional[MerkleRootHistory] = None,
+    sample_rate: float = DATA_AVAILABILITY_SAMPLE_RATE
+) -> Dict[str, Any]:
+    """
+    Full holographic audit with data availability.
+    Combines boundary detection, statistical outliers, and DA sampling.
+
+    Args:
+        receipts: Receipts to audit
+        expected_root: Optional expected Merkle root
+        root_history: Optional historical roots
+        sample_rate: DA sample rate
+
+    Returns:
+        Complete audit result
+    """
+    # Create holographic state
+    state = create_holographic_state(receipts)
+
+    # Verify data availability first
+    available, confidence, indices = verify_data_availability(state, sample_rate)
+
+    # Run holographic detection
+    detection = holographic_detect_with_da(
+        state.merkle_root,
+        expected_root,
+        root_history,
+        state
+    )
+
+    # Emit receipt
+    receipt = emit_holographic_da_receipt(state, detection, len(receipts))
+
+    return {
+        "state": state,
+        "detection": detection,
+        "receipt": receipt,
+        "audit_summary": {
+            "receipts_audited": len(receipts),
+            "merkle_root": state.merkle_root,
+            "fraud_detected": detection.get("fraud_detected", False),
+            "data_available": available,
+            "da_confidence": confidence,
+            "samples_checked": len(indices),
+        },
+    }
+
+
 # === STOPRULES ===
+
+def stoprule_data_unavailable(confidence: float, threshold: float = 0.99) -> None:
+    """Data availability confidence must meet threshold."""
+    if confidence < threshold:
+        emit_receipt("anomaly", {
+            "metric": "data_unavailable",
+            "confidence": confidence,
+            "threshold": threshold,
+            "delta": confidence - threshold,
+            "action": "investigate_withholding",
+            "classification": "critical",
+            "simulation_flag": DISCLAIMER,
+        })
+        raise StopRuleException(
+            f"Data availability confidence {confidence} below threshold {threshold}"
+        )
+
 
 def stoprule_detection_probability_low(actual_p: float) -> None:
     """Detection probability must be > 0.9999."""
@@ -453,4 +789,43 @@ if __name__ == "__main__":
     assert receipt["receipt_type"] == "holographic"
     assert "simulation_flag" in receipt
 
-    print(f"# PASS: holographic module self-test", file=sys.stderr)
+    print(f"# Base holographic tests passed", file=sys.stderr)
+
+    # === OMEGA v3: Data Availability Tests ===
+    print(f"# Testing OMEGA v3 data availability...", file=sys.stderr)
+
+    # Test holographic state creation
+    state = create_holographic_state(test_receipts)
+    assert state.merkle_root == root
+    assert state.erasure_encoded is not None
+    print(f"# Holographic state created with erasure encoding", file=sys.stderr)
+
+    # Test data availability verification
+    available, confidence, indices = verify_data_availability(state)
+    print(f"# DA verified: {available}, confidence: {confidence:.4f}, samples: {len(indices)}", file=sys.stderr)
+    assert available == True
+    assert confidence > 0.9
+
+    # Test holographic detect with DA
+    detection_da = holographic_detect_with_da(root, state=state)
+    assert "data_availability" in detection_da
+    assert detection_da["data_availability"]["verified"] == True
+    print(f"# Detection with DA: {detection_da['data_availability']}", file=sys.stderr)
+
+    # Test selective withholding detection
+    withholding = detect_selective_withholding(state, [0, 1, 2])
+    print(f"# Withholding detection: {withholding}", file=sys.stderr)
+
+    # Test DA receipt emission
+    da_receipt = emit_holographic_da_receipt(state, detection_da, len(test_receipts))
+    assert da_receipt["receipt_type"] == "holographic_da"
+    assert "data_availability" in da_receipt
+    print(f"# DA receipt emitted: {da_receipt['receipt_type']}", file=sys.stderr)
+
+    # Test full holographic audit
+    audit_result = holographic_audit(test_receipts)
+    assert "audit_summary" in audit_result
+    assert audit_result["audit_summary"]["data_available"] == True
+    print(f"# Full audit: {audit_result['audit_summary']}", file=sys.stderr)
+
+    print(f"# PASS: holographic module self-test (DA validation complete)", file=sys.stderr)

@@ -29,9 +29,9 @@ except ImportError:
 
 # === CONSTANTS (REQUIRED) ===
 
-TENANT_ID = "warrantproof-simulation"
+TENANT_ID = "warrantproof-omega"
 DISCLAIMER = "THIS IS A SIMULATION. NOT REAL DoD DATA. FOR RESEARCH ONLY."
-VERSION = "2.0.0"
+VERSION = "3.0.0"
 
 # ============================================================================
 # WARRANTPROOF v2 CONSTANTS (Physics-Derived from Grok Research)
@@ -101,6 +101,99 @@ META_RECEIPT_PREDICTION_WINDOW = 100  # Receipts to observe before validating pr
 # v1 Constants (kept for backward compatibility / hybrid mode)
 COMPRESSION_RATIO_LEGIT_V1 = 0.80
 COMPRESSION_RATIO_FRAUD_V1 = 0.50
+
+# ============================================================================
+# WARRANTPROOF v3: PROJECT OMEGA CONSTANTS (Physics + Cryptography)
+# ============================================================================
+
+# Kolmogorov Complexity Thresholds
+KOLMOGOROV_THRESHOLD = 0.65
+# K < 0.65 = scripted fraud (too compressible)
+# K > 0.75 = legitimate (algorithmic irreducibility)
+# Physics: Simple generators compress to low K(x). Reality is incompressible.
+
+KOLMOGOROV_LEGITIMATE_MIN = 0.75
+# Legitimate transactions typically have K(x) >= 0.75
+
+# Bekenstein Bound for Holographic Validation
+BEKENSTEIN_BITS_PER_DOLLAR = 1e-6
+# Metadata entropy (bits) per invoice dollar
+# $1M invoice requires ≥1 bit of digital trail
+# Derived from S ≤ (2π/ℏc) × (cost × area)
+# Physics: Information density must match physical reality
+
+# RAF Autocatalytic Network Detection
+RAF_CYCLE_MIN_LENGTH = 3
+# Minimum cycle length for autocatalytic loop
+# Length 3 = A→B→C→A (simplest self-sustaining)
+# Physics: Origin-of-life chemistry RAF sets
+
+RAF_CYCLE_MAX_LENGTH = 5
+# Maximum cycle length for attribution
+# Beyond 5 steps, catalysis too indirect
+# Physics: Information decay over network distance
+
+# Thompson Sampling for Adversarial Auditing
+THOMPSON_AUDIT_BUDGET = 0.05
+# Fraction of contractors audited per cycle (5%)
+# Budget-constrained stochastic allocation
+# Math: Multi-armed bandit regret minimization
+
+# Adversarial Robustness
+ADVERSARIAL_EPSILON = 0.01
+# Maximum perturbation for PGD attacks (1% of feature)
+# Mimics sophisticated fraudster capability
+# Security: Gradient-based evasion bound
+
+ADVERSARIAL_PGD_STEPS = 10
+# Number of PGD attack steps
+
+# Zero-Knowledge Proofs (Recursive SNARKs)
+ZKP_PROOF_SIZE_BYTES = 22000
+# Mina-style recursive proof size (22kb constant)
+# Cryptography: IVC (Incrementally Verifiable Computation)
+# Property: Size independent of transaction history depth
+
+ZKP_VERIFICATION_TIME_MAX_MS = 5000
+# Maximum verification time per proof (5 seconds)
+
+# Data Availability Sampling
+DATA_AVAILABILITY_SAMPLE_RATE = 0.10
+# Auditors sample 10% of transaction chunks
+# Detects erasure with p > 0.90
+# Cryptography: Ethereum sharding security model
+
+DATA_AVAILABILITY_THRESHOLD = 0.90
+# Minimum availability score for valid transaction
+
+# Layout Entropy for PDF Analysis
+LAYOUT_ENTROPY_THRESHOLD = 1.0
+# Bits of visual structure entropy
+# < 1.0 = script-generated (perfect alignment)
+# > 2.5 = human scan (warping, artifacts)
+# Physics: Shannon entropy of bounding box distribution
+
+LAYOUT_HUMAN_SCAN_MIN = 2.5
+# Minimum entropy for human-generated documents
+
+# SAM.gov Validation
+SAM_CA_TRUST_THRESHOLD = 0.50
+# Minimum Certificate Authority trust score
+# Below threshold = additional scrutiny
+# Cryptography: PKI trust metrics
+
+# API Rate Limits
+USASPENDING_RATE_LIMIT = 1000  # requests per hour
+USASPENDING_RECORDS_PER_PAGE = 100
+
+# KAN (Kolmogorov-Arnold Network) Architecture
+KAN_INPUT_DIM = 5  # K_complexity, layout_entropy, graph_centrality, time_delta, amount
+KAN_HIDDEN_DIM = 6
+KAN_OUTPUT_DIM = 1  # P(fraud)
+KAN_ROBUST_ACCURACY_TARGET = 0.85
+
+# OMEGA Version
+VERSION_OMEGA = "3.0.0"
 
 # === ALL DATA CITATIONS AS CONSTANTS WITH URLS ===
 

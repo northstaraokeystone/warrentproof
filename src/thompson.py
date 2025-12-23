@@ -30,6 +30,7 @@ from .core import (
     DISCLAIMER,
     THOMPSON_PRIOR_VARIANCE,
     THOMPSON_FP_TARGET,
+    THOMPSON_AUDIT_BUDGET,
     dual_hash,
     emit_receipt,
     StopRuleException,
@@ -260,6 +261,161 @@ def emit_thompson_receipt(
         "distribution_variance": round(distribution.variance, 6),
         "observations": distribution.observations,
         "posterior_updated": posterior_updated,
+        "simulation_flag": DISCLAIMER,
+    }, to_stdout=False)
+
+
+# === OMEGA v3: AUDIT SELECTION VIA MULTI-ARMED BANDIT ===
+
+@dataclass
+class ContractorArm:
+    """
+    Multi-armed bandit arm for a contractor.
+    Track P(fraud) posterior for audit selection.
+    """
+    contractor_id: str
+    alpha: float = 1.0  # Beta distribution alpha (successes + prior)
+    beta: float = 1.0   # Beta distribution beta (failures + prior)
+    audit_count: int = 0
+    fraud_detected: int = 0
+    last_audit: str = ""
+
+    def sample_posterior(self) -> float:
+        """Sample from Beta(alpha, beta) posterior."""
+        return np.random.beta(self.alpha, self.beta)
+
+    def update(self, fraud_found: bool):
+        """Update posterior based on audit result."""
+        self.audit_count += 1
+        if fraud_found:
+            self.alpha += 1
+            self.fraud_detected += 1
+        else:
+            self.beta += 1
+
+
+def thompson_audit_selection(
+    contractors: list,
+    budget: float = THOMPSON_AUDIT_BUDGET,
+    arms: dict = None
+) -> list:
+    """
+    OMEGA v3: Multi-armed bandit for audit allocation.
+    Sample from posterior P(fraud|data) per contractor.
+    Allocate budget stochastically.
+
+    Args:
+        contractors: List of contractor dicts with id and P(fraud) estimate
+        budget: Fraction of contractors to audit (default 0.05)
+        arms: Optional dict of ContractorArm objects
+
+    Returns:
+        List of contractor IDs selected for audit
+    """
+    if not contractors:
+        return []
+
+    # Number of audits to perform
+    num_audits = max(1, int(len(contractors) * budget))
+
+    # Initialize or use provided arms
+    if arms is None:
+        arms = {}
+
+    # Ensure all contractors have arms
+    for c in contractors:
+        cid = c.get("contractor_id") or c.get("id") or c.get("vendor")
+        if cid and cid not in arms:
+            # Initialize with prior based on any existing P(fraud) estimate
+            p_fraud = c.get("p_fraud", 0.1)
+            arms[cid] = ContractorArm(
+                contractor_id=cid,
+                alpha=1 + p_fraud * 10,  # Prior strength 10
+                beta=1 + (1 - p_fraud) * 10,
+            )
+
+    # Thompson sampling: sample from each arm's posterior
+    samples = []
+    for c in contractors:
+        cid = c.get("contractor_id") or c.get("id") or c.get("vendor")
+        if cid and cid in arms:
+            sample = arms[cid].sample_posterior()
+            samples.append((cid, sample))
+
+    # Sort by sampled P(fraud) descending
+    samples.sort(key=lambda x: x[1], reverse=True)
+
+    # Select top N for audit (exploitation)
+    # But also include random selection (exploration)
+    exploitation_count = int(num_audits * 0.7)  # 70% exploitation
+    exploration_count = num_audits - exploitation_count  # 30% exploration
+
+    selected = []
+
+    # Top samples (exploitation)
+    selected.extend([cid for cid, _ in samples[:exploitation_count]])
+
+    # Random selection from remaining (exploration)
+    remaining = [cid for cid, _ in samples[exploitation_count:]]
+    if remaining and exploration_count > 0:
+        import random
+        exploration_picks = random.sample(
+            remaining,
+            min(exploration_count, len(remaining))
+        )
+        selected.extend(exploration_picks)
+
+    return selected
+
+
+def update_audit_arms(
+    arms: dict,
+    audit_results: list
+) -> dict:
+    """
+    Update arm posteriors based on audit results.
+
+    Args:
+        arms: Dict of ContractorArm objects
+        audit_results: List of {contractor_id, fraud_found} dicts
+
+    Returns:
+        Updated arms dict
+    """
+    for result in audit_results:
+        cid = result.get("contractor_id")
+        fraud_found = result.get("fraud_found", False)
+
+        if cid in arms:
+            arms[cid].update(fraud_found)
+
+    return arms
+
+
+def emit_audit_selection_receipt(
+    selected_contractors: list,
+    total_contractors: int,
+    budget: float
+) -> dict:
+    """
+    Emit receipt documenting Thompson sampling audit selection.
+
+    Args:
+        selected_contractors: List of selected contractor IDs
+        total_contractors: Total number of contractors
+        budget: Audit budget used
+
+    Returns:
+        thompson_audit_receipt dict
+    """
+    return emit_receipt("thompson_audit", {
+        "tenant_id": TENANT_ID,
+        "selected_count": len(selected_contractors),
+        "total_contractors": total_contractors,
+        "budget": budget,
+        "actual_rate": len(selected_contractors) / total_contractors if total_contractors > 0 else 0,
+        "selected_sample": selected_contractors[:5],  # First 5 for privacy
+        "exploration_exploitation_ratio": "70/30",
         "simulation_flag": DISCLAIMER,
     }, to_stdout=False)
 
