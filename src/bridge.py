@@ -24,12 +24,18 @@ SLOs:
 - Support all 6 branch systems
 """
 
+import math
+from collections import Counter
 from typing import Optional
+
+import numpy as np
 
 from .core import (
     TENANT_ID,
     DISCLAIMER,
     BRANCHES,
+    MUTUAL_INFO_TRANSFER_THRESHOLD,
+    CROSS_BRANCH_ACCURACY_TARGET,
     dual_hash,
     emit_receipt,
     get_citation,
@@ -377,6 +383,187 @@ def _values_equivalent(val1, val2) -> bool:
         pass
 
     return False
+
+
+# === V2 MUTUAL INFORMATION ===
+
+def mutual_information(
+    branch_A_receipts: list,
+    branch_B_receipts: list
+) -> float:
+    """
+    Calculate I(A;B) = H(A) + H(B) - H(A,B).
+    Returns shared entropy between branches.
+
+    Args:
+        branch_A_receipts: Receipts from branch A
+        branch_B_receipts: Receipts from branch B
+
+    Returns:
+        Mutual information in bits
+    """
+    if not branch_A_receipts or not branch_B_receipts:
+        return 0.0
+
+    # Extract features for entropy calculation
+    def extract_features(receipts: list) -> list:
+        features = []
+        for r in receipts:
+            features.append(r.get("receipt_type", ""))
+            features.append(str(r.get("amount_usd", 0))[:4])
+            features.append(r.get("vendor", "")[:5] if r.get("vendor") else "")
+        return features
+
+    features_A = extract_features(branch_A_receipts)
+    features_B = extract_features(branch_B_receipts)
+    features_AB = features_A + features_B
+
+    def shannon_entropy(features: list) -> float:
+        if not features:
+            return 0.0
+        counter = Counter(features)
+        total = len(features)
+        entropy = 0.0
+        for count in counter.values():
+            if count > 0:
+                p = count / total
+                entropy -= p * math.log2(p)
+        return entropy
+
+    H_A = shannon_entropy(features_A)
+    H_B = shannon_entropy(features_B)
+    H_AB = shannon_entropy(features_AB)
+
+    # I(A;B) = H(A) + H(B) - H(A,B)
+    mutual_info = H_A + H_B - H_AB
+
+    # Clamp to non-negative (numerical errors can cause slight negatives)
+    return max(0.0, mutual_info)
+
+
+def transfer_pattern(
+    source_branch: str,
+    target_branch: str,
+    pattern: dict,
+    mutual_info: float
+) -> bool:
+    """
+    Transfer pattern from source to target branch if I(A;B) > threshold.
+
+    Args:
+        source_branch: Source branch name
+        target_branch: Target branch name
+        pattern: Pattern dict to transfer
+        mutual_info: Calculated mutual information
+
+    Returns:
+        True if transfer successful
+    """
+    if mutual_info < MUTUAL_INFO_TRANSFER_THRESHOLD:
+        # Insufficient shared information for reliable transfer
+        return False
+
+    # Emit transfer receipt
+    emit_receipt("pattern_transfer", {
+        "tenant_id": TENANT_ID,
+        "source_branch": source_branch,
+        "target_branch": target_branch,
+        "pattern_id": pattern.get("pattern_id", dual_hash(str(pattern))[:16]),
+        "mutual_information": round(mutual_info, 4),
+        "threshold": MUTUAL_INFO_TRANSFER_THRESHOLD,
+        "transfer_success": True,
+        "simulation_flag": DISCLAIMER,
+    }, to_stdout=False)
+
+    return True
+
+
+def calculate_transfer_benefit(
+    mutual_info: float,
+    pattern_complexity: float
+) -> float:
+    """
+    Calculate expected speedup from pattern transfer.
+    time_reduction ≈ I(A;B) / H(pattern)
+
+    Args:
+        mutual_info: Mutual information between branches
+        pattern_complexity: Entropy/complexity of pattern (H(pattern))
+
+    Returns:
+        Expected time reduction factor
+    """
+    if pattern_complexity <= 0:
+        return 0.0
+
+    benefit = mutual_info / pattern_complexity
+
+    return min(10.0, benefit)  # Cap at 10x speedup
+
+
+def cross_branch_learning(
+    source_branch: str,
+    source_receipts: list,
+    target_branch: str,
+    target_receipts: list,
+    patterns: list
+) -> dict:
+    """
+    Apply cross-branch learning using mutual information.
+    Transfer patterns from source to target if shared entropy sufficient.
+
+    Args:
+        source_branch: Source branch name
+        source_receipts: Receipts from source branch
+        target_branch: Target branch name
+        target_receipts: Receipts from target branch
+        patterns: Patterns learned from source
+
+    Returns:
+        Learning result with transferred patterns
+    """
+    # Calculate mutual information
+    mi = mutual_information(source_receipts, target_receipts)
+
+    transferred = []
+    failed = []
+
+    for pattern in patterns:
+        # Estimate pattern complexity from fingerprint
+        fingerprint = pattern.get("fingerprint", pattern)
+        complexity = len(str(fingerprint)) * 0.01  # Simple proxy
+
+        # Calculate transfer benefit
+        benefit = calculate_transfer_benefit(mi, complexity)
+
+        # Attempt transfer
+        if transfer_pattern(source_branch, target_branch, pattern, mi):
+            transferred.append({
+                "pattern": pattern,
+                "benefit": benefit,
+            })
+        else:
+            failed.append(pattern)
+
+    # Emit learning receipt
+    emit_receipt("cross_branch_learning", {
+        "tenant_id": TENANT_ID,
+        "source_branch": source_branch,
+        "target_branch": target_branch,
+        "mutual_information": round(mi, 4),
+        "patterns_transferred": len(transferred),
+        "patterns_failed": len(failed),
+        "accuracy_target": CROSS_BRANCH_ACCURACY_TARGET,
+        "citation": get_citation("GAO_DOD_IT"),
+        "simulation_flag": DISCLAIMER,
+    }, to_stdout=False)
+
+    return {
+        "mutual_information": mi,
+        "transferred": transferred,
+        "failed": failed,
+        "success_rate": len(transferred) / len(patterns) if patterns else 1.0,
+    }
 
 
 # === SYSTEM INFO ===

@@ -28,9 +28,20 @@ from .core import (
     TENANT_ID,
     DISCLAIMER,
     CITATIONS,
+    PATTERN_COHERENCE_MIN,
     dual_hash,
     emit_receipt,
     get_citation,
+)
+
+# Import v2 autocatalytic functions
+from .autocatalytic import (
+    compute_entropy_gap,
+    calculate_N_critical,
+    crystallize_pattern,
+    pattern_coherence_score,
+    detect_autocatalytic_closure,
+    autocatalytic_detect as _autocatalytic_detect_internal,
 )
 
 
@@ -388,6 +399,90 @@ def _detect_inventory_ghost(receipts: list) -> list[dict]:
             })
 
     return matches
+
+
+# === V2 AUTOCATALYTIC DETECTION ===
+
+def autocatalytic_detect(
+    receipts: list,
+    mode: str = 'auto',
+    existing_patterns: list = None
+) -> list:
+    """
+    Detect fraud via autocatalytic pattern emergence.
+    V2 replacement for hardcoded pattern_match.
+
+    Steps:
+    1. Build entropy_tree from receipts
+    2. Query tree for high-entropy clusters
+    3. Call autocatalytic.crystallize_pattern on clusters
+    4. Validate patterns via pattern_coherence
+    5. Return fraud detections
+
+    Args:
+        receipts: Receipts to analyze
+        mode: 'auto' = pure v2 emergent, 'hybrid' = v2 + v1 fallback
+        existing_patterns: Optional list of known patterns
+
+    Returns:
+        List of fraud detections
+    """
+    if not receipts:
+        return []
+
+    detections = []
+
+    # Run v2 autocatalytic detection
+    v2_detections = _autocatalytic_detect_internal(receipts, existing_patterns)
+
+    for detection in v2_detections:
+        detections.append({
+            "anomaly_type": detection.get("anomaly_type", "autocatalytic"),
+            "confidence": detection.get("confidence", 0.7),
+            "pattern_id": detection.get("pattern_id", "emergent"),
+            "receipt_id": detection.get("receipt_id", ""),
+            "detection_mode": "v2_autocatalytic",
+            "citation": get_citation("SHANNON_1948"),
+            "simulation_flag": DISCLAIMER,
+        })
+
+    # If hybrid mode, also run v1 pattern matching as fallback
+    if mode == 'hybrid':
+        v1_matches = scan(receipts)
+        for match in v1_matches:
+            # Avoid duplicates
+            if not any(
+                d.get("receipt_id") == match.get("affected_receipts", [""])[0]
+                for d in detections
+            ):
+                detections.append({
+                    "anomaly_type": match.get("anomaly_type", "v1_pattern"),
+                    "confidence": match.get("confidence", 0.6),
+                    "pattern_id": "v1_hardcoded",
+                    "receipt_id": match.get("affected_receipts", [""])[0] if match.get("affected_receipts") else "",
+                    "detection_mode": "v1_fallback",
+                    "citation": match.get("citation", get_citation("GAO_FRAUD_ESTIMATE")),
+                    "simulation_flag": DISCLAIMER,
+                })
+
+    return detections
+
+
+def pattern_match(receipt: dict, patterns: list) -> list:
+    """
+    Legacy v1 pattern matching - DEPRECATED in v2.
+    Use autocatalytic_detect instead.
+
+    Args:
+        receipt: Receipt to check
+        patterns: List of patterns to match against
+
+    Returns:
+        List of matching pattern IDs
+    """
+    # Delegate to scan for backward compatibility
+    matches = scan([receipt])
+    return [m.get("anomaly_type", "") for m in matches]
 
 
 # === DETECTION RECEIPT ===

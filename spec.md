@@ -1,4 +1,4 @@
-# WarrantProof Specification v1.0
+# WarrantProof Specification v2.0
 
 ## ⚠️ SIMULATION ONLY - NOT REAL DoD DATA - FOR RESEARCH ONLY ⚠️
 
@@ -13,8 +13,52 @@ WarrantProof is a simulation and research system that models how receipts-native
 accountability infrastructure could theoretically apply to defense procurement
 and operations, based solely on publicly available data.
 
-**Core Paradigm:** Fraud creates entropy. Compression detects disorder.
+**v1 Core Paradigm:** Fraud creates entropy. Compression detects disorder.
 Every decision becomes a cryptographic warrant. Receipt chains prove accountability lineage.
+
+---
+
+## v2 PARADIGM: Thermodynamic Autocatalytic Pattern Emergence
+
+v2 represents a fundamental shift from hardcoded rule matching to physics-based
+pattern emergence. The system discovers fraud patterns through entropy dynamics
+rather than explicit programming.
+
+### Core Physics Principles
+
+| Principle | Application | Module |
+|-----------|-------------|--------|
+| Shannon Entropy | Legitimate receipts compress (low H), fraud resists (high H) | autocatalytic.py |
+| Kolmogorov Complexity | Compression ratio ≈ minimum description length | compress.py |
+| Autocatalytic RAF Sets | Patterns crystallize when catalytic coverage > threshold | autocatalytic.py |
+| Thompson Sampling | Bayesian thresholds collapse contextually per branch | thompson.py |
+| Holographic Principle | Volume entropy encodes on boundary (Merkle root) | holographic.py |
+| SIR Epidemic Model | R₀ = density × volume / latency for vendor spread | epidemic.py |
+| Entropy Trees | O(log N) hierarchical detection vs O(N) scan | entropy_tree.py |
+| dC/dt Cascade Detection | Compression derivative as leading indicator | cascade.py |
+
+### Key Insight
+
+Instead of programming "if transaction > $10M and vendor in watchlist, flag fraud",
+the v2 system observes that fraudulent transactions have measurably higher entropy
+than legitimate ones. When enough receipts accumulate, patterns **crystallize
+spontaneously** - they emerge from the data rather than being imposed on it.
+
+### N_critical: The Phase Transition
+
+The critical insight is the N_critical formula:
+```
+N_critical = log₂(1/ΔH) × (H_legit / ΔH)
+```
+
+Where:
+- ΔH = H_fraud - H_legit (entropy gap)
+- H_legit = average entropy of legitimate receipts
+- H_fraud = average entropy of fraudulent receipts
+
+When N > N_critical, patterns become statistically distinguishable. Below this
+threshold, detection is unreliable. The system tracks this phase transition
+in real-time.
 
 ---
 
@@ -42,6 +86,32 @@ Every decision becomes a cryptographic warrant. Receipt chains prove accountabil
 
 ---
 
+## v2 Module Architecture
+
+### New Modules (v2)
+
+| Module | Purpose | Key Functions |
+|--------|---------|---------------|
+| thompson.py | Bayesian threshold sampling | `sample_threshold()`, `update_posterior()`, `contextual_collapse()` |
+| autocatalytic.py | Pattern emergence without hardcoding | `autocatalytic_detect()`, `crystallize_pattern()`, `compute_entropy_gap()` |
+| entropy_tree.py | O(log N) hierarchical detection | `build_entropy_tree()`, `entropy_bisect()`, `search_tree()` |
+| cascade.py | dC/dt monitoring for early alerts | `calculate_compression_derivative()`, `detect_cascade_onset()`, `alert_early_warning()` |
+| epidemic.py | R₀ vendor spread modeling | `calculate_R0()`, `SIR_model_step()`, `predict_spread()`, `recommend_quarantine()` |
+| holographic.py | Boundary-only fraud detection | `holographic_detect()`, `compute_merkle_syndrome()`, `detect_from_boundary()` |
+| meta_receipt.py | Receipts about receipts | `emit_meta_receipt()`, `validate_self_reference()`, `test_autocatalytic_closure()` |
+
+### Modified Modules (v2 enhancements)
+
+| Module | v2 Additions |
+|--------|--------------|
+| core.py | Physics-derived constants (N_CRITICAL_FORMULA, ENTROPY_GAP_MIN, etc.) |
+| compress.py | `compression_derivative()`, `field_wise_compression()`, `compress_receipt_with_entropy()` |
+| detect.py | `autocatalytic_detect()` mode, v1 patterns deprecated to fallback |
+| ledger.py | `holographic_detect()`, `get_merkle_root()`, `verify_holographic_integrity()` |
+| bridge.py | `mutual_information()`, `transfer_pattern()`, `cross_branch_learning()` |
+
+---
+
 ## Outputs
 
 ### Receipts
@@ -59,6 +129,19 @@ Every operation emits a receipt. Receipt types:
 | lineage | trace.py | Per query | approval_chain, gaps |
 | bridge | bridge.py | Per translation | source_system, target_system |
 | simulation | sim.py | Per scenario | scenario, pass/fail, metrics |
+
+### v2 Receipt Types
+
+| Type | Module | Frequency | Key Fields |
+|------|--------|-----------|------------|
+| threshold | thompson.py | Per collapse | mean, variance, branch_context |
+| pattern_emergence | autocatalytic.py | Per crystallization | entropy_gap, coherence, N_critical |
+| entropy_tree | entropy_tree.py | Per tree update | depth, node_count, rebalanced |
+| cascade_alert | cascade.py | Per onset detection | dC_dt, time_to_cascade, severity |
+| epidemic_warning | epidemic.py | Per R₀ threshold | R0, infected_vendors, quarantine_rec |
+| holographic | holographic.py | Per boundary check | syndrome, fraud_detected, bits_used |
+| meta_receipt | meta_receipt.py | Per closure test | closure_test, self_reference_valid |
+| mutual_info | bridge.py | Per transfer | source_branch, target_branch, MI_score |
 
 ### Simulation Results
 - `SimState`: Final simulation state
@@ -78,6 +161,8 @@ Every operation emits a receipt. Receipt types:
 
 ## SLO Thresholds
 
+### v1 SLOs (maintained)
+
 | SLO | Threshold | Test Assertion | Stoprule Action |
 |-----|-----------|----------------|-----------------|
 | Warrant generation | ≤ 50ms | `assert time <= 50` | emit violation |
@@ -90,6 +175,23 @@ Every operation emits a receipt. Receipt types:
 | Lineage completeness | ≥ 0.95 | `assert completeness >= 0.95` | emit violation |
 | Scan latency | ≤ 100ms/1000 receipts | `assert time <= 100` | emit violation |
 | Translation latency | ≤ 200ms | `assert time <= 200` | emit violation |
+
+### v2 SLOs (physics-derived)
+
+| SLO | Threshold | Physics Basis | Module |
+|-----|-----------|---------------|--------|
+| N_critical | < 10,000 receipts | Phase transition bound | autocatalytic.py |
+| Entropy gap | ΔH ≥ 0.15 bits | Pattern distinguishability | autocatalytic.py |
+| Pattern coherence | ≥ 0.80 | Autocatalytic closure | autocatalytic.py |
+| Thompson FP rate | ≤ 2% | Bayesian regret bound | thompson.py |
+| Variance convergence | Yes | Posterior concentration | thompson.py |
+| Cascade speedup | ≥ 5× vs v1 | dC/dt leading indicator | cascade.py |
+| Epidemic R₀ | < 1.0 (contained) | SIR stability | epidemic.py |
+| Detection probability | p > 0.9999 | Holographic bound | holographic.py |
+| Bits per receipt | ≤ 2 | Bekenstein bound | holographic.py |
+| Mutual info threshold | ≥ 0.30 | Transfer criterion | bridge.py |
+| Cross-branch accuracy | ≥ 85% | Transfer fidelity | bridge.py |
+| Tree depth | O(log N) | Hierarchical bound | entropy_tree.py |
 
 ---
 
@@ -128,6 +230,48 @@ and halt execution on critical failures.
 - **Action:** Emit anomaly receipt, reject operation
 - **Classification:** violation
 
+### v2 Stoprules
+
+#### stoprule_entropy_gap_insufficient
+- **Trigger:** ΔH < ENTROPY_GAP_MIN (0.15)
+- **Action:** Emit anomaly receipt, fall back to v1 detection
+- **Classification:** deviation
+
+#### stoprule_threshold_divergent
+- **Trigger:** Thompson variance > 10× prior variance
+- **Action:** Emit anomaly receipt, recalibrate prior
+- **Classification:** deviation
+
+#### stoprule_false_positive_exceeded
+- **Trigger:** FP rate > THOMPSON_FP_TARGET (2%)
+- **Action:** Emit anomaly receipt, tighten threshold
+- **Classification:** deviation
+
+#### stoprule_cascade_imminent
+- **Trigger:** dC/dt > CASCADE_DERIVATIVE_THRESHOLD
+- **Action:** Emit cascade_alert receipt, trigger early warning
+- **Classification:** alert
+
+#### stoprule_epidemic_spreading
+- **Trigger:** R₀ > EPIDEMIC_R0_THRESHOLD (1.0)
+- **Action:** Emit epidemic_warning receipt, recommend quarantine
+- **Classification:** alert
+
+#### stoprule_detection_probability_low
+- **Trigger:** p < 0.9999 (holographic detection)
+- **Action:** Emit anomaly receipt, increase encoding
+- **Classification:** deviation
+
+#### stoprule_boundary_bits_exceeded
+- **Trigger:** bits > 2N (Bekenstein bound violation)
+- **Action:** Emit anomaly receipt, optimize encoding
+- **Classification:** violation
+
+#### stoprule_pattern_incoherent
+- **Trigger:** Coherence < PATTERN_COHERENCE_MIN (0.80)
+- **Action:** Emit anomaly receipt, wait for more receipts
+- **Classification:** deviation
+
 ---
 
 ## Rollback Procedures
@@ -153,7 +297,7 @@ and halt execution on critical failures.
 
 ---
 
-## The 6 Mandatory Scenarios
+## The 6 Mandatory Scenarios (v1)
 
 ### 1. BASELINE
 Standard military procurement simulation.
@@ -190,8 +334,31 @@ Edge cases and pathological inputs.
 
 ---
 
+## v2 Scenarios (Physics-Based)
+
+### 7. AUTOCATALYTIC
+Pattern emergence without hardcoded rules.
+- Generate N receipts, measure entropy gap, wait for crystallization
+- Track N_critical phase transition
+- **Pass:** N_critical < 10,000, pattern_coherence ≥ 0.80
+
+### 8. THOMPSON
+Bayesian threshold calibration.
+- Start with prior distribution, sample thresholds, update posterior
+- Measure false positive rate convergence
+- **Pass:** FP_rate ≤ 2%, variance_converged = True
+
+### 9. HOLOGRAPHIC
+Boundary-only fraud detection.
+- Detect fraud from Merkle root alone without scanning receipts
+- Verify Bekenstein bound (bits ≤ 2N)
+- **Pass:** detection_probability > 0.9999, bits_per_receipt ≤ 2
+
+---
+
 ## Data Flow
 
+### v1 Flow
 ```
 INPUT                    PROCESSING                    OUTPUT
 ─────                    ──────────                    ──────
@@ -211,6 +378,35 @@ Transaction     ──►     warrant.py      ──►     warrant_receipt
                               │
                               ▼
                         sim.py          ──►     simulation_receipt
+```
+
+### v2 Flow (Physics Layer)
+```
+INPUT                    v2 PROCESSING                 OUTPUT
+─────                    ─────────────                 ──────
+Receipt Stream  ──►     entropy_tree.py  ──►     tree structure (O(log N))
+                              │
+                              ▼
+                        autocatalytic.py ──►     pattern_emergence_receipt
+                              │                  (crystallization)
+                              ▼
+                        thompson.py      ──►     threshold_receipt
+                              │                  (Bayesian collapse)
+                              ▼
+                        cascade.py       ──►     cascade_alert_receipt
+                              │                  (dC/dt monitoring)
+                              ▼
+                        epidemic.py      ──►     epidemic_warning_receipt
+                              │                  (R₀ spread modeling)
+                              ▼
+                        holographic.py   ──►     holographic_receipt
+                              │                  (boundary detection)
+                              ▼
+                        meta_receipt.py  ──►     meta_receipt
+                                                 (autocatalytic closure)
+
+Ledger          ──►     holographic_detect()    Fraud detected from
+(Merkle root)           (O(1) boundary check)   boundary alone
 ```
 
 ---
@@ -240,6 +436,35 @@ Transaction     ──►     warrant.py      ──►     warrant_receipt
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2024-01-01 | Initial specification |
+| 2.0.0 | 2024-12-23 | v2 paradigm: thermodynamic autocatalytic pattern emergence, Thompson sampling, holographic detection |
+
+### v2.0.0 Changelog
+
+**New Modules:**
+- thompson.py: Bayesian threshold sampling with contextual collapse
+- autocatalytic.py: Pattern emergence without hardcoded rules
+- entropy_tree.py: O(log N) hierarchical detection
+- cascade.py: dC/dt compression derivative monitoring
+- epidemic.py: R₀ vendor spread modeling with SIR
+- holographic.py: Boundary-only fraud detection (Bekenstein bound)
+- meta_receipt.py: Receipts-about-receipts for autocatalytic closure
+
+**Enhanced Modules:**
+- core.py: Physics-derived constants (N_critical formula, entropy gaps, etc.)
+- compress.py: Compression derivative, field-wise entropy analysis
+- detect.py: Autocatalytic detection mode (v1 patterns as fallback)
+- ledger.py: Holographic detection from Merkle root
+- bridge.py: Mutual information for cross-branch pattern transfer
+
+**New Scenarios:**
+- AUTOCATALYTIC: Pattern crystallization without hardcoding
+- THOMPSON: Bayesian threshold calibration
+- HOLOGRAPHIC: Boundary-only fraud detection
+
+**Key Insight:**
+The v2 paradigm inverts the detection model. Instead of "if amount > threshold, flag fraud",
+patterns emerge from entropy dynamics. Fraud has higher Shannon entropy than legitimate
+transactions. When N > N_critical, patterns crystallize spontaneously.
 
 ---
 

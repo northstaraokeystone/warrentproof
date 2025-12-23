@@ -30,6 +30,15 @@ from .core import (
     stoprule_invalid_receipt,
 )
 
+# Import v2 holographic functions
+from .holographic import (
+    holographic_detect as _holographic_detect_internal,
+    MerkleRootHistory,
+    compute_merkle_syndrome,
+    detect_from_boundary,
+    emit_holographic_receipt,
+)
+
 
 # === LEDGER STATE ===
 
@@ -335,6 +344,118 @@ def get_merkle_proof(receipt_id: str, anchor: dict) -> Optional[dict]:
         "anchor_root": anchor.get("merkle_root"),
         "verified": True,
         "simulation_flag": DISCLAIMER,
+    }
+
+
+# === V2 HOLOGRAPHIC DETECTION ===
+
+# Global Merkle root history
+_root_history: Optional[MerkleRootHistory] = None
+
+
+def get_root_history() -> MerkleRootHistory:
+    """Get or create global Merkle root history."""
+    global _root_history
+    if _root_history is None:
+        _root_history = MerkleRootHistory()
+    return _root_history
+
+
+def get_merkle_root() -> str:
+    """
+    Return current Merkle root of ledger.
+    Used for holographic detection.
+
+    Returns:
+        Current Merkle root hash
+    """
+    ledger = get_ledger()
+
+    if not ledger.receipts:
+        return merkle([])
+
+    return merkle(ledger.receipts)
+
+
+def holographic_detect(
+    merkle_root: Optional[str] = None,
+    root_history: Optional[MerkleRootHistory] = None
+) -> bool:
+    """
+    Detect fraud from Merkle root alone (O(1) boundary check).
+    Call holographic.detect_from_boundary().
+
+    Args:
+        merkle_root: Current Merkle root (calculated if None)
+        root_history: Optional history (uses global if None)
+
+    Returns:
+        True if fraud detected from boundary
+    """
+    if merkle_root is None:
+        merkle_root = get_merkle_root()
+
+    if root_history is None:
+        root_history = get_root_history()
+
+    # Add current root to history
+    root_history.add(merkle_root)
+
+    # Use holographic detection
+    result = _holographic_detect_internal(
+        current_root=merkle_root,
+        expected_root=None,  # No expected root - use statistical detection
+        root_history=root_history
+    )
+
+    # Emit holographic receipt if fraud detected
+    if result.get("fraud_detected"):
+        ledger = get_ledger()
+        emit_holographic_receipt(
+            merkle_root_current=merkle_root,
+            detection_result=result,
+            num_receipts=len(ledger.receipts)
+        )
+
+    return result.get("fraud_detected", False)
+
+
+def verify_holographic_integrity(expected_root: str) -> dict:
+    """
+    Verify current ledger matches expected Merkle root.
+    Uses holographic syndrome computation.
+
+    Args:
+        expected_root: Expected Merkle root hash
+
+    Returns:
+        Verification result dict
+    """
+    current_root = get_merkle_root()
+
+    syndrome = compute_merkle_syndrome(current_root, expected_root)
+
+    if not syndrome.get("match"):
+        # Fraud detected via syndrome
+        result = _holographic_detect_internal(
+            current_root=current_root,
+            expected_root=expected_root
+        )
+
+        return {
+            "verified": False,
+            "current_root": current_root,
+            "expected_root": expected_root,
+            "syndrome": syndrome,
+            "fraud_detected": True,
+            "detection_result": result,
+        }
+
+    return {
+        "verified": True,
+        "current_root": current_root,
+        "expected_root": expected_root,
+        "fraud_detected": False,
     }
 
 

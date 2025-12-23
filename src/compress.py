@@ -40,6 +40,7 @@ from typing import Optional
 from .core import (
     TENANT_ID,
     DISCLAIMER,
+    CASCADE_WINDOW_SIZE,
     dual_hash,
     emit_receipt,
     get_citation,
@@ -375,6 +376,113 @@ def compress_certification_chain(receipts: list) -> dict:
         "citation": get_citation("NEWPORT_NEWS_WELDING"),
         "simulation_flag": DISCLAIMER,
     }
+
+
+# === V2 FUNCTIONS ===
+
+def compression_derivative(
+    compression_history: list,
+    window_size: int = CASCADE_WINDOW_SIZE
+) -> float:
+    """
+    Calculate dC/dt over moving window.
+    Feeds cascade.py for early fraud detection.
+
+    Args:
+        compression_history: List of compression ratios (oldest to newest)
+        window_size: Size of moving window for calculation
+
+    Returns:
+        Rate of change dC/dt (negative = degrading compression)
+    """
+    if len(compression_history) < 2:
+        return 0.0
+
+    # Use recent window
+    window = compression_history[-window_size:]
+
+    if len(window) < 2:
+        return 0.0
+
+    # Simple linear regression for slope
+    import numpy as np
+    n = len(window)
+    x = np.arange(n)
+    y = np.array(window)
+
+    # Least squares: dC/dt = Σ(x-x̄)(y-ȳ) / Σ(x-x̄)²
+    x_mean = np.mean(x)
+    y_mean = np.mean(y)
+
+    numerator = np.sum((x - x_mean) * (y - y_mean))
+    denominator = np.sum((x - x_mean) ** 2)
+
+    if denominator == 0:
+        return 0.0
+
+    return float(numerator / denominator)
+
+
+def field_wise_compression(receipt: dict) -> dict:
+    """
+    Compress each field individually.
+    Returns {field: compression_ratio}. Identifies fraud fingerprint
+    (which fields resist compression).
+
+    Args:
+        receipt: Receipt dict to analyze
+
+    Returns:
+        Dict mapping field names to compression ratios
+    """
+    result = {}
+
+    for field, value in receipt.items():
+        if field in ["payload_hash", "ts", "tenant_id", "simulation_flag"]:
+            continue
+
+        # Serialize field value
+        if isinstance(value, (dict, list)):
+            data = json.dumps(value, sort_keys=True).encode('utf-8')
+        else:
+            data = str(value).encode('utf-8')
+
+        if len(data) < 10:
+            # Too small to compress meaningfully
+            result[field] = 1.0
+            continue
+
+        # Compress field
+        compressed = gzip.compress(data, compresslevel=9)
+        ratio = len(compressed) / len(data)
+        result[field] = round(ratio, 4)
+
+    return result
+
+
+def compress_receipt_with_entropy(receipt: dict) -> tuple:
+    """
+    Enhanced compression that returns ratio, entropy, and field ratios.
+    Used for entropy_tree indexing and field fingerprinting.
+
+    Args:
+        receipt: Single receipt to analyze
+
+    Returns:
+        (compression_ratio, entropy_score, field_ratios)
+    """
+    # Calculate overall compression
+    data = json.dumps(receipt, sort_keys=True).encode('utf-8')
+    compressed = gzip.compress(data, compresslevel=9)
+    ratio = len(compressed) / len(data) if len(data) > 0 else 1.0
+
+    # Calculate entropy
+    entropy = entropy_score([receipt])
+
+    # Calculate field-wise compression
+    field_ratios = field_wise_compression(receipt)
+
+    return (round(ratio, 4), round(entropy, 4), field_ratios)
 
 
 # === ANOMALY DETECTION VIA COMPRESSION ===

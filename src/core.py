@@ -31,7 +31,76 @@ except ImportError:
 
 TENANT_ID = "warrantproof-simulation"
 DISCLAIMER = "THIS IS A SIMULATION. NOT REAL DoD DATA. FOR RESEARCH ONLY."
-VERSION = "1.0.0"
+VERSION = "2.0.0"
+
+# ============================================================================
+# WARRANTPROOF v2 CONSTANTS (Physics-Derived from Grok Research)
+# ============================================================================
+
+import numpy as np
+
+# Q1: Autocatalytic Detection - Phase transition threshold from RAF percolation theory
+# N_critical ≈ log₂(ΔH⁻¹) × (H_legit / ΔH)
+def N_CRITICAL_FORMULA(H_legit: float, H_fraud: float) -> float:
+    """Calculate critical N for autocatalytic phase transition."""
+    delta_H = H_fraud - H_legit
+    if delta_H <= 0:
+        return float('inf')
+    return np.log2(1.0 / delta_H) * (H_legit / delta_H)
+
+ENTROPY_GAP_MIN = 0.15  # Minimum ΔH = H_fraud - H_legit for detection
+
+# Q2: Thompson Sampling - Bayesian threshold uncertainty
+# accuracy_gain ≈ √(2 ln n / π² variance_prior)
+THOMPSON_PRIOR_VARIANCE = 0.1  # Initial variance in threshold distribution
+THOMPSON_FP_TARGET = 0.02  # False positive rate < 2%
+
+# Q3: Hierarchical Compression - Entropy tree depth for O(log N) search
+# speedup ≈ log₂ N / (1 - r_compress)
+def ENTROPY_TREE_MAX_DEPTH(N: int) -> int:
+    """Calculate maximum tree depth for N receipts."""
+    if N <= 1:
+        return 1
+    return int(np.log2(N)) + 1
+
+ENTROPY_TREE_REBALANCE_THRESHOLD = 0.10  # Rebalance when 10% imbalance
+ENTROPY_TREE_STORAGE_OVERHEAD_MAX = 0.05  # <5% overhead vs v1
+
+# Q4: Cross-Branch Learning - Mutual information transfer threshold
+# time_reduction ≈ I(branch_A; branch_B) / H(pattern)
+MUTUAL_INFO_TRANSFER_THRESHOLD = 0.30  # 30% shared entropy required
+CROSS_BRANCH_ACCURACY_TARGET = 0.85  # >85% transfer accuracy
+
+# Q5: Entropy Cascade - Compression derivative monitoring
+# early_detection_gain ≈ cascade_rate / (dC/dt × cost_FP)
+CASCADE_DERIVATIVE_THRESHOLD = 0.05  # dC/dt alert at 5% degradation per unit time
+CASCADE_WINDOW_SIZE = 50  # Moving window for dC/dt calculation
+CASCADE_FALSE_ALERT_MAX = 0.10  # <10% false cascade alerts
+
+# Q6: Fraud Epidemic - SIR model parameters
+# R₀ = density × volume / latency_detection
+EPIDEMIC_R0_THRESHOLD = 1.0  # R₀ > 1 triggers quarantine
+EPIDEMIC_DETECTION_LATENCY_TARGET = 7.0  # 7 days max latency
+EPIDEMIC_RECOVERY_RATE = 0.10  # 10% infected vendors remediated per cycle
+
+# Q7: Holographic Ledger - Boundary encoding via Bekenstein bound
+# bits_required ≈ area × log(1/p_detect)
+HOLOGRAPHIC_BITS_PER_RECEIPT = 2  # Theoretical minimum from holographic principle
+HOLOGRAPHIC_DETECTION_PROBABILITY_MIN = 0.9999  # 99.99% detection from boundary
+def HOLOGRAPHIC_LOCALIZATION_COMPLEXITY(N: int) -> int:
+    """O(log N) to identify branch containing fraud."""
+    if N <= 1:
+        return 1
+    return int(np.log2(N)) + 1
+
+# Autocatalytic Pattern Parameters
+PATTERN_COHERENCE_MIN = 0.80  # Minimum coherence for pattern survival
+RAF_CLOSURE_ACCURACY_MIN = 0.80  # Minimum prediction accuracy for self-reference
+META_RECEIPT_PREDICTION_WINDOW = 100  # Receipts to observe before validating prediction
+
+# v1 Constants (kept for backward compatibility / hybrid mode)
+COMPRESSION_RATIO_LEGIT_V1 = 0.80
+COMPRESSION_RATIO_FRAUD_V1 = 0.50
 
 # === ALL DATA CITATIONS AS CONSTANTS WITH URLS ===
 
