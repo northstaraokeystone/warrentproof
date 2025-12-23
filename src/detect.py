@@ -35,6 +35,10 @@ from .core import (
     get_citation,
 )
 
+# v5.1 Temporal imports
+from .core.constants import ENTROPY_RESISTANCE_MULTIPLIER, RESISTANCE_THRESHOLD
+from .core.temporal import resistance_to_decay
+
 # OMEGA v3 imports
 from .zkp import generate_proof, verify_proof, ZKProof
 from .kolmogorov import calculate_kolmogorov, detect_generator_pattern
@@ -606,6 +610,99 @@ def detect_with_zkp_gate(
             detections.append(d)
 
     return detections
+
+
+# ============================================================================
+# v5.1 TEMPORAL RESISTANCE AMPLIFICATION
+# ============================================================================
+
+def amplify_with_resistance(
+    base_confidence: float,
+    resistance: float,
+    max_boost: float = 0.95,
+) -> float:
+    """
+    Amplify anomaly confidence using temporal resistance metric.
+
+    v5.1: Entropy sensitivity rises ~22% with decay resistance.
+    Formula: amplified = base * (1 + resistance * ENTROPY_RESISTANCE_MULTIPLIER)
+
+    Physics: Resistance to natural decay is a low-entropy, high-information
+    signal. Static edges in dynamic environments are algorithmically improbable.
+
+    Args:
+        base_confidence: Original confidence score (0.0-1.0)
+        resistance: Resistance value from temporal analysis
+        max_boost: Maximum amplified confidence (default 0.95)
+
+    Returns:
+        Amplified confidence score
+    """
+    if resistance <= 0:
+        return base_confidence
+
+    # Apply resistance multiplier
+    # ENTROPY_RESISTANCE_MULTIPLIER = 1.22 means +22% sensitivity boost
+    multiplier = 1.0 + (resistance * (ENTROPY_RESISTANCE_MULTIPLIER - 1.0))
+    amplified = base_confidence * multiplier
+
+    # Cap at max_boost to avoid overconfidence
+    return min(amplified, max_boost)
+
+
+def compute_anomaly_score(
+    receipt: dict,
+    graph_resistance: dict = None,
+) -> dict:
+    """
+    Compute comprehensive anomaly score with temporal amplification.
+
+    Combines:
+    1. Pattern-based detection (v1)
+    2. Autocatalytic detection (v2)
+    3. Kolmogorov complexity (v3 OMEGA)
+    4. Temporal resistance amplification (v5.1)
+
+    Args:
+        receipt: Receipt to analyze
+        graph_resistance: Dict of {entity: max_resistance} from RAF graph
+
+    Returns:
+        Anomaly score dict with base and amplified scores
+    """
+    if graph_resistance is None:
+        graph_resistance = {}
+
+    # Get base detections
+    matches = scan([receipt])
+    base_confidence = max((m.get("confidence", 0) for m in matches), default=0.0)
+
+    # Get entity from receipt
+    entity = (
+        receipt.get("vendor") or
+        receipt.get("source_duns") or
+        receipt.get("provider_npi") or
+        "unknown"
+    )
+
+    # Get resistance for this entity
+    resistance = graph_resistance.get(entity, 0.0)
+
+    # Amplify if resistance found
+    amplified_confidence = amplify_with_resistance(base_confidence, resistance)
+
+    # Calculate boost percentage
+    boost_pct = ((amplified_confidence / base_confidence) - 1.0) * 100 if base_confidence > 0 else 0
+
+    return {
+        "entity": entity,
+        "base_confidence": base_confidence,
+        "resistance": resistance,
+        "amplified_confidence": amplified_confidence,
+        "boost_pct": boost_pct,
+        "temporal_flag": resistance > RESISTANCE_THRESHOLD,
+        "matches": matches,
+    }
 
 
 # === DETECTION RECEIPT ===

@@ -188,3 +188,103 @@ def generate_sample_data(n_claims: int = 10, n_providers: int = 5) -> MedicaidRe
         receipts.claims.append(claim)
 
     return receipts
+
+
+# ============================================================================
+# v5.1 SAMPLE DATA FOR CONTAGION SCENARIO
+# ============================================================================
+
+def sample_medicaid_receipts(
+    n: int = 100,
+    seed: int = 43,
+    include_ring: bool = True,
+    shell_entity: str = "SHELL_HOLDINGS_LLC",
+) -> List[Dict[str, Any]]:
+    """
+    Generate synthetic Medicaid receipts for contagion testing.
+
+    Includes:
+    - Normal legitimate transactions
+    - Medicaid ring: MEDLAB_TESTING_LLC → CLINIC_X → CLINIC_Y → MEDLAB
+    - Link to shell entity: CLINIC_Y → SHELL_HOLDINGS_LLC
+
+    Per spec: "8% shell overlap between Defense/Medicaid empirically validated"
+
+    Args:
+        n: Number of receipts to generate
+        seed: Random seed for reproducibility
+        include_ring: Whether to include fraud ring pattern
+        shell_entity: ID of shell entity linking domains
+
+    Returns:
+        List of receipt dicts suitable for RAF analysis
+    """
+    from datetime import datetime, timedelta
+
+    random.seed(seed)
+    receipts = []
+    base_date = datetime(2024, 1, 1)
+
+    # Normal providers
+    providers = [f"PROVIDER_{i:05d}" for i in range(10)]
+    providers.extend(["MEDLAB_TESTING_LLC", "CLINIC_X", "CLINIC_Y"])
+
+    # Generate normal transactions
+    for i in range(n - 10 if include_ring else n):
+        source = random.choice(providers)
+        target = random.choice([p for p in providers if p != source])
+        receipts.append({
+            "receipt_type": "medicaid_ingest_receipt",
+            "source_duns": source,
+            "target_duns": target,
+            "provider_npi": source,
+            "claim_id": f"MDCD_{i:06d}",
+            "cpt_codes": random.sample(["99213", "99214", "99215"], random.randint(1, 3)),
+            "amount_usd": random.random() * 100_000,
+            "date": base_date + timedelta(days=random.randint(0, 365)),
+            "domain": "medicaid",
+            "tenant_id": "gov-os-medicaid",
+            "simulation_flag": DISCLAIMER,
+        })
+
+    if include_ring:
+        # Ring pattern with old dates (triggers zombie detection)
+        ring_date = base_date - timedelta(days=400)
+        ring_providers = ["MEDLAB_TESTING_LLC", "CLINIC_X", "CLINIC_Y"]
+
+        for i in range(len(ring_providers)):
+            source = ring_providers[i]
+            target = ring_providers[(i + 1) % len(ring_providers)]
+            receipts.append({
+                "receipt_type": "medicaid_raf_receipt",
+                "source_duns": source,
+                "target_duns": target,
+                "provider_npi": source,
+                "referral_to": target,
+                "claim_id": f"RING_MDCD_{i}",
+                "amount_usd": 50_000,
+                "date": ring_date,
+                "domain": "medicaid",
+                "_is_fraud": True,
+                "fraud_type": "provider_ring",
+                "tenant_id": "gov-os-medicaid",
+                "simulation_flag": DISCLAIMER,
+            })
+
+        # Link to shell entity (cross-domain connector)
+        receipts.append({
+            "receipt_type": "medicaid_raf_receipt",
+            "source_duns": "CLINIC_Y",
+            "target_duns": shell_entity,
+            "provider_npi": "CLINIC_Y",
+            "claim_id": "SHELL_LINK_MDCD",
+            "amount_usd": 25_000,
+            "date": ring_date,
+            "domain": "medicaid",
+            "_is_fraud": True,
+            "fraud_type": "shell_link",
+            "tenant_id": "gov-os-medicaid",
+            "simulation_flag": DISCLAIMER,
+        })
+
+    return receipts
