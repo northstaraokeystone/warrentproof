@@ -1,0 +1,38 @@
+domain: medicaid
+version: "1.0.0"
+tenant_id: gov-os-medicaid
+
+volatility:
+  primary: medical_cpi
+  secondary:
+    - drug_price_index
+    - procedure_cost_index
+  sources:
+    medical_cpi: data/volatility_indices/medical_cpi.csv
+    drug_price_index: data/volatility_indices/drug_price_index.csv
+
+schema:
+  entities:
+    - claim
+    - provider
+    - beneficiary
+    - cpt_code
+  node_key: provider_npi
+  edge_key: referral_to
+
+receipts:
+  - medicaid_ingest_receipt
+  - medicaid_raf_receipt
+  - referral_ring_receipt
+
+thresholds:
+  base_compression: 0.85
+  volatility_alpha: 0.10
+
+scenarios:
+  - BASELINE
+  - STRESS
+  - PROVIDER_RING
+  - UPCODING_DETECTION
+  - PHANTOM_BILLING
+  - KICKBACK_CHAIN

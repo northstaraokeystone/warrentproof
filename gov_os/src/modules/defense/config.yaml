@@ -1,0 +1,40 @@
+domain: defense
+version: "1.0.0"
+tenant_id: gov-os-defense
+
+volatility:
+  primary: steel_price
+  secondary:
+    - commodity_index
+    - labor_index
+  sources:
+    steel_price: data/volatility_indices/steel_price_index.csv
+    commodity_index: data/volatility_indices/commodity_index.csv
+
+schema:
+  entities:
+    - contract
+    - vendor
+    - subcontractor
+    - shipyard_block
+  node_key: vendor_id
+  edge_key: payment_to
+
+receipts:
+  - defense_ingest_receipt
+  - defense_raf_receipt
+  - shipyard_iteration_receipt
+  - shipyard_additive_receipt
+  - shipyard_assembly_receipt
+
+thresholds:
+  base_compression: 0.85
+  volatility_alpha: 0.15
+
+scenarios:
+  - BASELINE
+  - STRESS
+  - SUBCONTRACTOR_RING
+  - SHIPYARD_DISRUPTION
+  - COST_PLUS_FRAUD
+  - RAPID_ITERATION

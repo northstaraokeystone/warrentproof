@@ -1,0 +1,323 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Gov-OS Universal Ledger Schema",
+  "description": "Unified schema for all federal fraud detection domains. THIS IS A SIMULATION FOR ACADEMIC RESEARCH PURPOSES ONLY.",
+  "type": "object",
+  "definitions": {
+    "receipt_base": {
+      "type": "object",
+      "properties": {
+        "receipt_id": {
+          "type": "string",
+          "description": "Unique receipt identifier (dual_hash)"
+        },
+        "receipt_type": {
+          "type": "string",
+          "description": "Type of receipt (e.g., ingest_receipt, raf_cycle_receipt)"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4,
+          "description": "Receipt level (L0-L4)"
+        },
+        "domain": {
+          "type": "string",
+          "enum": ["defense", "medicaid"],
+          "description": "Domain this receipt belongs to"
+        },
+        "tenant_id": {
+          "type": "string",
+          "description": "Multi-tenant identifier"
+        },
+        "simulation_flag": {
+          "type": "string",
+          "const": "THIS IS A SIMULATION FOR ACADEMIC RESEARCH PURPOSES ONLY",
+          "description": "Required simulation disclaimer"
+        }
+      },
+      "required": ["receipt_id", "receipt_type", "timestamp", "level", "domain", "simulation_flag"]
+    },
+    "ingest_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/receipt_base" },
+        {
+          "type": "object",
+          "properties": {
+            "receipt_type": { "const": "ingest_receipt" },
+            "level": { "const": 0 },
+            "data_hash": {
+              "type": "string",
+              "description": "Hash of ingested data"
+            },
+            "source": {
+              "type": "string",
+              "description": "Data source identifier"
+            },
+            "record_count": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of records ingested"
+            }
+          }
+        }
+      ]
+    },
+    "raf_cycle_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/receipt_base" },
+        {
+          "type": "object",
+          "properties": {
+            "receipt_type": { "const": "raf_cycle_receipt" },
+            "level": { "const": 1 },
+            "cycle_nodes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Ordered list of nodes in the cycle"
+            },
+            "cycle_length": {
+              "type": "integer",
+              "minimum": 3,
+              "description": "Number of nodes in cycle"
+            },
+            "cycle_value": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Total value flowing through cycle"
+            },
+            "anomaly_type": {
+              "type": "string",
+              "enum": ["raf_cycle", "payment_ring", "referral_ring"],
+              "description": "Type of detected cycle"
+            }
+          },
+          "required": ["cycle_nodes", "cycle_length"]
+        }
+      ]
+    },
+    "entropy_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/receipt_base" },
+        {
+          "type": "object",
+          "properties": {
+            "receipt_type": { "const": "entropy_receipt" },
+            "level": { "const": 1 },
+            "entropy_score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Shannon entropy ratio"
+            },
+            "compression_ratio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Kolmogorov compression estimate"
+            },
+            "threshold_used": {
+              "type": "number",
+              "description": "Adaptive threshold applied"
+            },
+            "volatility_factor": {
+              "type": "number",
+              "description": "Volatility index at detection time"
+            }
+          },
+          "required": ["entropy_score", "threshold_used"]
+        }
+      ]
+    },
+    "cascade_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/receipt_base" },
+        {
+          "type": "object",
+          "properties": {
+            "receipt_type": { "const": "cascade_receipt" },
+            "level": { "const": 2 },
+            "derivative_value": {
+              "type": "number",
+              "description": "dC/dt derivative value"
+            },
+            "cascade_depth": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Depth of cascade propagation"
+            },
+            "affected_nodes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Nodes affected by cascade"
+            }
+          },
+          "required": ["derivative_value"]
+        }
+      ]
+    },
+    "epidemic_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/receipt_base" },
+        {
+          "type": "object",
+          "properties": {
+            "receipt_type": { "const": "epidemic_receipt" },
+            "level": { "const": 2 },
+            "r0_estimate": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Estimated R₀ reproduction number"
+            },
+            "infected_count": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of infected nodes"
+            },
+            "generation": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Current generation of spread"
+            }
+          },
+          "required": ["r0_estimate"]
+        }
+      ]
+    },
+    "holographic_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/receipt_base" },
+        {
+          "type": "object",
+          "properties": {
+            "receipt_type": { "const": "holographic_receipt" },
+            "level": { "const": 3 },
+            "boundary_hash": {
+              "type": "string",
+              "description": "Merkle root of boundary"
+            },
+            "detection_probability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Probability of detection (should be ≥0.9999)"
+            },
+            "boundary_size": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Size of the boundary set"
+            }
+          },
+          "required": ["boundary_hash", "detection_probability"]
+        }
+      ]
+    },
+    "meta_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/receipt_base" },
+        {
+          "type": "object",
+          "properties": {
+            "receipt_type": { "const": "meta_receipt" },
+            "level": { "const": 4 },
+            "child_receipts": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Receipt IDs of child receipts"
+            },
+            "merkle_root": {
+              "type": "string",
+              "description": "Merkle root of child receipts"
+            },
+            "summary": {
+              "type": "object",
+              "description": "Summary statistics"
+            }
+          },
+          "required": ["child_receipts", "merkle_root"]
+        }
+      ]
+    },
+    "defense_ingest_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/ingest_receipt" },
+        {
+          "type": "object",
+          "properties": {
+            "domain": { "const": "defense" },
+            "contract_id": { "type": "string" },
+            "vendor_id": { "type": "string" },
+            "payment_to": { "type": "string" },
+            "amount": { "type": "number", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "medicaid_ingest_receipt": {
+      "allOf": [
+        { "$ref": "#/definitions/ingest_receipt" },
+        {
+          "type": "object",
+          "properties": {
+            "domain": { "const": "medicaid" },
+            "claim_id": { "type": "string" },
+            "provider_npi": { "type": "string", "pattern": "^[0-9]{10}$" },
+            "beneficiary_id": { "type": "string" },
+            "cpt_codes": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^[0-9]{5}$" }
+            },
+            "amount": { "type": "number", "minimum": 0 }
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "ledger_version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Schema version"
+    },
+    "domain": {
+      "type": "string",
+      "description": "Domain identifier"
+    },
+    "receipts": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/definitions/ingest_receipt" },
+          { "$ref": "#/definitions/raf_cycle_receipt" },
+          { "$ref": "#/definitions/entropy_receipt" },
+          { "$ref": "#/definitions/cascade_receipt" },
+          { "$ref": "#/definitions/epidemic_receipt" },
+          { "$ref": "#/definitions/holographic_receipt" },
+          { "$ref": "#/definitions/meta_receipt" },
+          { "$ref": "#/definitions/defense_ingest_receipt" },
+          { "$ref": "#/definitions/medicaid_ingest_receipt" }
+        ]
+      },
+      "description": "Array of receipts"
+    },
+    "merkle_root": {
+      "type": "string",
+      "description": "Merkle root of all receipts"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Ledger creation timestamp"
+    },
+    "simulation_flag": {
+      "type": "string",
+      "const": "THIS IS A SIMULATION FOR ACADEMIC RESEARCH PURPOSES ONLY"
+    }
+  },
+  "required": ["ledger_version", "domain", "receipts", "simulation_flag"]
+}
