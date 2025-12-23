@@ -71,3 +71,5 @@ Thumbs.db
 
 # Ledger (simulation data)
 receipts.jsonl
+shieldproof_receipts.jsonl
+*_receipts.jsonl
