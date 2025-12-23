@@ -251,6 +251,53 @@ from .ledger import (
     emit_bekenstein_receipt,
 )
 
+# v4.0 User-Friendly Optimization Modules
+from .insight import (
+    explain_anomaly,
+    explain_compression_result,
+    explain_kolmogorov_result,
+    explain_raf_result,
+    generate_executive_summary,
+)
+
+from .fitness import (
+    PatternFitness,
+    SystemHealth,
+    calculate_entropy,
+    record_pattern_fitness,
+    get_system_health,
+    explain_fitness_for_users,
+    prune_harmful_patterns,
+)
+
+from .guardian import (
+    EvidenceItem,
+    EvidenceSet,
+    evaluate_evidence_quality,
+    abstain,
+    check_counter_evidence,
+    check_evidence_integrity,
+    gate_decision,
+)
+
+from .freshness import (
+    assess_freshness,
+    assess_evidence_set_freshness,
+    get_refresh_priorities,
+    explain_freshness_for_users,
+    monitor_freshness_decay,
+)
+
+from .learner import (
+    PatternSignature,
+    PatternLibrary,
+    match_patterns,
+    transfer_pattern,
+    learn_pattern,
+    explain_pattern_for_users,
+    get_library_summary,
+)
+
 # Export all
 __all__ = [
     # Version
@@ -287,4 +334,36 @@ __all__ = [
     "validate_entity",
     "detect_all_catalytic_links",
     "holographic_audit",
+    # v4.0 User-Friendly Modules
+    "explain_anomaly",
+    "explain_compression_result",
+    "explain_kolmogorov_result",
+    "explain_raf_result",
+    "generate_executive_summary",
+    "PatternFitness",
+    "SystemHealth",
+    "calculate_entropy",
+    "record_pattern_fitness",
+    "get_system_health",
+    "explain_fitness_for_users",
+    "prune_harmful_patterns",
+    "EvidenceItem",
+    "EvidenceSet",
+    "evaluate_evidence_quality",
+    "abstain",
+    "check_counter_evidence",
+    "check_evidence_integrity",
+    "gate_decision",
+    "assess_freshness",
+    "assess_evidence_set_freshness",
+    "get_refresh_priorities",
+    "explain_freshness_for_users",
+    "monitor_freshness_decay",
+    "PatternSignature",
+    "PatternLibrary",
+    "match_patterns",
+    "transfer_pattern",
+    "learn_pattern",
+    "explain_pattern_for_users",
+    "get_library_summary",
 ]

@@ -10,6 +10,12 @@ Usage:
     python cli.py --test                    # Emit test receipt
     python cli.py scenario --run BASELINE   # Run scenario
     python cli.py export --scenario BASELINE --format json
+
+v4.0 User-Friendly Commands:
+    python cli.py explain --file data.json  # Plain-language explanations
+    python cli.py health                    # System health check
+    python cli.py patterns --list           # View known fraud patterns
+    python cli.py freshness --check data/   # Check evidence freshness
 """
 
 import argparse
@@ -71,6 +77,31 @@ def main():
     export_parser.add_argument('--include-citations', action='store_true',
                               help='Include all citations')
 
+    # v4.0 User-Friendly Commands
+    explain_parser = subparsers.add_parser('explain', help='Get plain-language explanations')
+    explain_parser.add_argument('--file', type=str,
+                               help='JSON file with analysis results to explain')
+    explain_parser.add_argument('--demo', action='store_true',
+                               help='Run demo with sample data')
+
+    health_parser = subparsers.add_parser('health', help='Check system health')
+    health_parser.add_argument('--detailed', action='store_true',
+                              help='Show detailed pattern breakdown')
+
+    patterns_parser = subparsers.add_parser('patterns', help='Manage fraud patterns')
+    patterns_parser.add_argument('--list', action='store_true',
+                                help='List all known patterns')
+    patterns_parser.add_argument('--check', type=str,
+                                help='Check data file against patterns')
+    patterns_parser.add_argument('--domain', type=str,
+                                help='Filter patterns by domain')
+
+    freshness_parser = subparsers.add_parser('freshness', help='Check evidence freshness')
+    freshness_parser.add_argument('--check', type=str,
+                                 help='Check freshness of evidence file')
+    freshness_parser.add_argument('--demo', action='store_true',
+                                 help='Run demo with sample dates')
+
     args = parser.parse_args()
 
     # Handle commands
@@ -89,6 +120,18 @@ def main():
 
     if args.command == 'export':
         return run_export(args.scenario, args.format, args.include_citations)
+
+    if args.command == 'explain':
+        return run_explain(args.file, args.demo)
+
+    if args.command == 'health':
+        return run_health(args.detailed)
+
+    if args.command == 'patterns':
+        return run_patterns(args.list, args.check, args.domain)
+
+    if args.command == 'freshness':
+        return run_freshness(args.check, args.demo)
 
     # Default: show help
     parser.print_help()
@@ -190,6 +233,211 @@ def run_export(scenario: str, format: str, include_citations: bool):
         print(f"\n⚠️ {DISCLAIMER}")
 
     return 0
+
+
+def run_explain(file_path: str, demo: bool):
+    """Generate plain-language explanations."""
+    from src.insight import (
+        explain_anomaly,
+        explain_compression_result,
+        generate_executive_summary,
+    )
+
+    print(f"# WarrantProof Explain - Plain Language Analysis", file=sys.stderr)
+    print(f"# {DISCLAIMER}", file=sys.stderr)
+
+    if demo:
+        # Demo with sample results
+        sample_results = [
+            {
+                "anomaly_type": "compression_failure",
+                "fraud_likelihood": 0.75,
+                "compression_ratio": 0.42,
+            },
+            {
+                "classification": "suspicious",
+                "compression_ratio": 0.55,
+                "entropy_score": 4.5,
+                "coherence_score": 0.45,
+                "fraud_likelihood": 0.6,
+            },
+        ]
+
+        print("\n--- Demo: Explaining Sample Anomaly ---\n")
+        explanation = explain_anomaly(sample_results[0])
+        print(f"Title: {explanation['title']}")
+        print(f"\nSummary: {explanation['summary']}")
+        print(f"\nWhat This Means:\n{explanation['what_it_means']}")
+        print(f"\nSuggested Action:\n{explanation['suggested_action']}")
+        print(f"\nConfidence: {explanation['confidence_level']}")
+
+        print("\n\n--- Demo: Executive Summary ---\n")
+        summary = generate_executive_summary(sample_results)
+        print(f"Status: {summary['status'].upper()}")
+        print(f"\n{summary['status_message']}")
+        print(f"\nRecommendation:\n{summary['recommendation']}")
+
+        return 0
+
+    if file_path:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+
+        if isinstance(data, list):
+            summary = generate_executive_summary(data)
+            print(json.dumps(summary, indent=2))
+        else:
+            explanation = explain_anomaly(data)
+            print(json.dumps(explanation, indent=2))
+
+        return 0
+
+    print("Use --demo for demo or --file <path> for file analysis", file=sys.stderr)
+    return 1
+
+
+def run_health(detailed: bool):
+    """Check system health."""
+    from src.fitness import (
+        get_system_health,
+        explain_fitness_for_users,
+        prune_harmful_patterns,
+    )
+
+    print(f"# WarrantProof System Health Check", file=sys.stderr)
+    print(f"# {DISCLAIMER}", file=sys.stderr)
+
+    # Get user-friendly explanation
+    explanation = explain_fitness_for_users()
+    print(f"\n{explanation['headline']}")
+    print(f"\n{explanation['explanation']}")
+    print(f"\nEffectiveness: {explanation['effectiveness_percent']}%")
+
+    if detailed:
+        print("\n--- Detailed Health Report ---")
+        health = get_system_health()
+        print(f"\nStatus: {health['status'].upper()}")
+        print(f"Overall Fitness: {health['overall_fitness']:.4f}")
+
+        breakdown = health.get('pattern_breakdown', {})
+        print(f"\nPattern Breakdown:")
+        print(f"  Total: {breakdown.get('total', 0)}")
+        print(f"  Excellent: {breakdown.get('excellent', 0)}")
+        print(f"  Good: {breakdown.get('good', 0)}")
+        print(f"  Harmful: {breakdown.get('harmful', 0)}")
+
+        prune = prune_harmful_patterns()
+        if prune['action_needed']:
+            print(f"\n⚠️ {prune['summary']}")
+
+    return 0
+
+
+def run_patterns(list_patterns: bool, check_file: str, domain: str):
+    """Manage fraud patterns."""
+    from src.learner import (
+        get_library_summary,
+        match_patterns,
+        explain_pattern_for_users,
+    )
+
+    print(f"# WarrantProof Pattern Library", file=sys.stderr)
+    print(f"# {DISCLAIMER}", file=sys.stderr)
+
+    if list_patterns:
+        summary = get_library_summary()
+        print(f"\nKnown Fraud Patterns: {summary['total_patterns']}")
+        print(f"Domains Covered: {', '.join(summary['domains_covered'])}")
+        print(f"\n--- Pattern List ---")
+
+        for p in summary['patterns']:
+            print(f"\n• {p['name']} ({p['pattern_id']})")
+            print(f"  Source: {p['source']}")
+            print(f"  Domains: {', '.join(p['domains'])}")
+            print(f"  Transferability: {p['transferability']:.0%}")
+
+        return 0
+
+    if check_file:
+        with open(check_file, 'r') as f:
+            data = json.load(f)
+
+        result = match_patterns(data, domain=domain)
+
+        print(f"\nPatterns Checked: {result['patterns_checked']}")
+        print(f"Matches Found: {result['matches_found']}")
+        print(f"Risk Level: {result['risk_level'].upper()}")
+
+        if result['matches']:
+            print("\n--- Matching Patterns ---")
+            for match in result['matches'][:5]:
+                print(f"\n• {match['pattern_name']}")
+                print(f"  Confidence: {match['confidence']:.0%}")
+                print(f"  Source Case: {match['source_case']}")
+
+                # Get user-friendly explanation
+                explanation = explain_pattern_for_users(match)
+                print(f"  {explanation['explanation'][:200]}...")
+
+        return 0
+
+    print("Use --list to view patterns or --check <file> to analyze data", file=sys.stderr)
+    return 1
+
+
+def run_freshness(check_file: str, demo: bool):
+    """Check evidence freshness."""
+    from datetime import datetime, timedelta
+    from src.freshness import (
+        assess_freshness,
+        assess_evidence_set_freshness,
+        explain_freshness_for_users,
+        get_refresh_priorities,
+    )
+
+    print(f"# WarrantProof Evidence Freshness Check", file=sys.stderr)
+    print(f"# {DISCLAIMER}", file=sys.stderr)
+
+    if demo:
+        print("\n--- Demo: Evidence Freshness ---\n")
+
+        # Demo with various ages
+        demo_dates = [
+            ("15 days old", datetime.utcnow() - timedelta(days=15), "general"),
+            ("45 days old", datetime.utcnow() - timedelta(days=45), "general"),
+            ("100 days old", datetime.utcnow() - timedelta(days=100), "general"),
+            ("20 days old (price data)", datetime.utcnow() - timedelta(days=20), "price_data"),
+        ]
+
+        for label, ts, dtype in demo_dates:
+            result = assess_freshness(ts, dtype)
+            explanation = explain_freshness_for_users(result)
+            print(f"• {label}: {explanation['headline']}")
+            print(f"  Confidence: {result['confidence_factor']:.0%}")
+            print(f"  {explanation['explanation'][:100]}...")
+            print()
+
+        return 0
+
+    if check_file:
+        with open(check_file, 'r') as f:
+            data = json.load(f)
+
+        if isinstance(data, list):
+            result = assess_evidence_set_freshness(data)
+            print(f"\nEvidence Items: {result['evidence_count']}")
+            print(f"Overall Freshness: {result['overall_freshness'].upper()}")
+            print(f"Confidence Factor: {result['confidence_factor']:.0%}")
+            print(f"\n{result['recommendation']}")
+
+            priorities = get_refresh_priorities(data)
+            if priorities['items_needing_refresh'] > 0:
+                print(f"\n⚠️ {priorities['items_needing_refresh']} items need refresh")
+
+        return 0
+
+    print("Use --demo for demo or --check <file> for file analysis", file=sys.stderr)
+    return 1
 
 
 if __name__ == "__main__":
