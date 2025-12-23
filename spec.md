@@ -1,4 +1,4 @@
-# Gov-OS Specification v5.1
+# Gov-OS Specification v6.0
 
 **THIS IS A SIMULATION FOR ACADEMIC RESEARCH PURPOSES ONLY**
 
@@ -10,28 +10,89 @@ Gov-OS is a universal federal fraud detection operating system that detects proc
 
 **Core Principle:** Compression ratio reveals fraud.
 
-### v5.1 Temporal Physics
+### v6.0 ProofChain Integration
 
-v5.1 adds temporal decay physics for cross-domain contagion detection:
-- **Exponential Decay**: Legitimate relationships decay naturally (Wt = W₀e^(-λt))
-- **Resistance Detection**: Static edges in dynamic environments are fraud signals
-- **Zombie Entities**: Preserved weight with zero activity = physically impossible
-- **Cross-Domain Contagion**: Fraud collapse in one domain flags entities in linked domains
+v6.0 integrates 12 standalone proof builds into Gov-OS as modular domain plugins:
+
+| ID | Module | Target Domain | Annual Exposure | Priority |
+|----|--------|---------------|-----------------|----------|
+| D1 | doge | Efficiency claims verification | $214B claimed | P0 |
+| S1 | spend | Federal budget verification | $34T budget | P0 |
+| G1 | green | Climate/ESG accountability | $40T ESG market | P0 |
+| B1 | benefit | Government benefits (Medicaid) | $100B fraud | P0 |
+| V1 | vote | Election integrity | 160M votes | P1 |
+| C1 | claim | Government claims | $500B+ claims | P1 |
+| F1 | safety | Pharmacovigilance | Drug safety | P1 |
+| K1 | coin | Crypto ownership verification | $3B+ unverified | P1 |
+| O1 | origin | Supply chain verification | $500B counterfeit | P1 |
+| R1 | graft | FBI public corruption tracking | Corruption cases | P1 |
+| W1 | warrant | Military efficiency | $850B budget | P1 |
+| L1 | lab | Scientific reproducibility | Research crisis | P2 |
+
+**The Paradigm Inversion:**
+- ❌ OLD: Build standalone proofs for each domain. Each proof has its own infrastructure.
+- ✅ NEW: Build modular domain plugins for unified Gov-OS. Share infrastructure. Detect cross-domain fraud via super-graph contagion.
+
+**The Core Insight:**
+> "When a shell entity links DOGEProof efficiency claims to SpendProof budget flows to BenefitProof disbursements, a fraud detection in any single domain propagates temporal rigidity to all linked domains—flagging preemptive fraud before local evidence exists."
 
 ---
 
 ## Architecture Overview
 
-Gov-OS unifies multiple fraud detection subsystems into a single cohesive platform:
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           GOV-OS v6.0 ARCHITECTURE                              │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │                        CORE INFRASTRUCTURE                              │    │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │    │
+│  │  │  ledger  │ │  anchor  │ │  detect  │ │ temporal │ │   loop   │      │    │
+│  │  │ receipts │ │ dual-hash│ │ entropy  │ │  decay   │ │ self-imp │      │    │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘      │    │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐                   │    │
+│  │  │   raf    │ │  insight │ │   gate   │ │ contagion│                   │    │
+│  │  │  graphs  │ │plain-text│ │ T+2h/48h │ │super-grph│                   │    │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘                   │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                    │                                            │
+│                    ┌───────────────┴───────────────┐                            │
+│                    ▼                               ▼                            │
+│  ┌─────────────────────────────────┐ ┌─────────────────────────────────┐        │
+│  │       PRIORITY 0 MODULES        │ │       PRIORITY 1 MODULES        │        │
+│  │  ┌──────────┐ ┌──────────┐      │ │  ┌──────────┐ ┌──────────┐      │        │
+│  │  │   doge   │ │  spend   │      │ │  │   vote   │ │  claim   │      │        │
+│  │  │efficiency│ │  budget  │      │ │  │ election │ │gov claims│      │        │
+│  │  └──────────┘ └──────────┘      │ │  └──────────┘ └──────────┘      │        │
+│  │  ┌──────────┐ ┌──────────┐      │ │  ┌──────────┐ ┌──────────┐      │        │
+│  │  │  green   │ │ benefit  │      │ │  │  safety  │ │   coin   │      │        │
+│  │  │ ESG/clim │ │ medicaid │      │ │  │pharma-vig│ │  crypto  │      │        │
+│  │  └──────────┘ └──────────┘      │ │  └──────────┘ └──────────┘      │        │
+│  └─────────────────────────────────┘ │  ┌──────────┐ ┌──────────┐      │        │
+│                                      │  │  origin  │ │  graft   │      │        │
+│                                      │  │supply-chn│ │corruption│      │        │
+│                                      │  └──────────┘ └──────────┘      │        │
+│                                      │  ┌──────────┐                   │        │
+│                                      │  │ warrant  │                   │        │
+│                                      │  │ military │                   │        │
+│                                      │  └──────────┘                   │        │
+│                                      └─────────────────────────────────┘        │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │                      PRIORITY 2 MODULES                                 │    │
+│  │  ┌──────────┐                                                           │    │
+│  │  │   lab    │                                                           │    │
+│  │  │ science  │                                                           │    │
+│  │  └──────────┘                                                           │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
 
-| Subsystem | Purpose | Location |
-|-----------|---------|----------|
-| Core Detection | Compression-based fraud detection | `src/` |
-| Domain Modules | Extensible domain adapters | `src/domains/` |
-| Shipyard | Trump-class battleship tracking | `src/shipyard/` |
-| RAZOR | Kolmogorov validation engine | `src/razor/` |
+---
 
-### Version History
+## Version History
 
 | Version | Focus | Key Innovation |
 |---------|-------|----------------|
@@ -41,6 +102,7 @@ Gov-OS unifies multiple fraud detection subsystems into a single cohesive platfo
 | v4.0 | Usability | Plain-language explanations + self-improvement |
 | v5.0 | Unification | Single cohesive platform with domain modules |
 | v5.1 | Temporal | Cross-domain contagion via temporal decay physics |
+| v6.0 | ProofChain | 12 modules unified + cross-domain fraud detection |
 
 ---
 
@@ -48,110 +110,570 @@ Gov-OS unifies multiple fraud detection subsystems into a single cohesive platfo
 
 ```
 gov-os/
-├── cli.py                      # Unified command-line interface
-├── spec.md                     # This specification
-├── ledger_schema.json          # Core receipt type definitions
-├── CLAUDEME.md                 # Execution standard
-├── CITATIONS.md                # Source references
-├── DISCLAIMER.md               # Legal disclaimers
+├── cli.py                              # Unified CLI with module commands
+├── spec.md                             # This specification
+├── ledger_schema.json                  # Core receipt type definitions
+├── CLAUDEME.md                         # Execution standard
+├── CITATIONS.md                        # Source references
+├── DISCLAIMER.md                       # Legal disclaimers
+├── gate.sh                             # Unified execution gate runner
 │
-├── src/                        # Source code
-│   ├── __init__.py             # Package exports
-│   ├── core.py                 # Foundation: hash, receipts, citations
-│   ├── domain.py               # Domain loader and registry
+├── src/                                # Source code
+│   ├── __init__.py                     # Package exports
+│   ├── core.py                         # Foundation: hash, receipts, citations
+│   ├── domain.py                       # Domain loader and registry
 │   │
-│   ├── core/                   # v5.1 Core module package
-│   │   ├── __init__.py         # Core exports
-│   │   ├── constants.py        # All constants including temporal
-│   │   ├── receipt.py          # Receipt emission functions
-│   │   ├── utils.py            # Utility functions (hash, merkle)
-│   │   ├── temporal.py         # v5.1 Temporal decay physics
-│   │   ├── insight.py          # v5.1 Plain-English explanations
-│   │   ├── harness.py          # Simulation harness
-│   │   ├── raf.py              # RAF re-exports
-│   │   └── volatility.py       # Volatility index
+│   ├── core/                           # SHARED INFRASTRUCTURE
+│   │   ├── __init__.py                 # Export all core modules
+│   │   ├── constants.py                # Universal constants (all modules)
+│   │   ├── receipt.py                  # All receipt types
+│   │   ├── utils.py                    # Utility functions (hash, merkle)
+│   │   ├── ledger.py                   # Receipts storage, Merkle batching
+│   │   ├── anchor.py                   # Dual-hash (SHA256:BLAKE3)
+│   │   ├── compress.py                 # QED compression
+│   │   ├── detect.py                   # Entropy-based detection
+│   │   ├── raf.py                      # RAF graphs + super-graph builder
+│   │   ├── temporal.py                 # Temporal decay (v5.1)
+│   │   ├── contagion.py                # Cross-domain propagation (v6.0)
+│   │   ├── insight.py                  # Plain-English explanations
+│   │   ├── gate.py                     # Universal T+2h/24h/48h gates (v6.0)
+│   │   ├── loop.py                     # LOOP self-improvement (v6.0)
+│   │   ├── zk.py                       # ZK privacy layer (v6.0)
+│   │   ├── harness.py                  # Simulation harness
+│   │   └── volatility.py               # Volatility index
 │   │
-│   ├── scenarios/              # v5.1 Scenario modules
+│   ├── modules/                        # DOMAIN MODULES (v6.0)
 │   │   ├── __init__.py
-│   │   └── contagion.py        # Cross-domain contagion scenario
+│   │   ├── doge/                       # DOGEProof → Module (P0)
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py               # Domain constants
+│   │   │   ├── ingest.py               # Efficiency claim ingestion
+│   │   │   ├── verify.py               # Pre+post causality pairs
+│   │   │   ├── receipts.py             # doge_proof, qed_claim receipts
+│   │   │   ├── data.py                 # Sample data generators
+│   │   │   └── scenario.py             # DOGE-specific scenarios
+│   │   │
+│   │   ├── spend/                      # SpendProof → Module (P0)
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py               # Budget verification constants
+│   │   │   ├── ingest.py               # Disbursement ingestion
+│   │   │   ├── verify.py               # ZK conservation proofs
+│   │   │   ├── receipts.py             # disbursement_proof, audit_compress
+│   │   │   ├── zk_circuits.py          # Groth16 over Pedersen
+│   │   │   ├── data.py                 # Budget simulation data
+│   │   │   └── scenario.py             # Budget-specific scenarios
+│   │   │
+│   │   ├── green/                      # GreenProof → Module (P0)
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py               # ESG/climate constants
+│   │   │   ├── ingest.py               # Emissions data ingestion
+│   │   │   ├── verify.py               # Satellite timeline verification
+│   │   │   ├── receipts.py             # green_proof, emissions_anchor
+│   │   │   ├── data.py                 # ESG simulation data
+│   │   │   └── scenario.py             # Climate-specific scenarios
+│   │   │
+│   │   ├── benefit/                    # BenefitProof → Module (P0)
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py               # Benefits constants
+│   │   │   ├── ingest.py               # Enrollment/disbursement ingestion
+│   │   │   ├── verify.py               # Qualification verification
+│   │   │   ├── receipts.py             # benefit_disburse, fraud_compress
+│   │   │   ├── data.py                 # Medicaid simulation data
+│   │   │   └── scenario.py             # Benefits-specific scenarios
+│   │   │
+│   │   ├── vote/                       # VoteProof → Module (P1)
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py               # Election integrity constants
+│   │   │   ├── ingest.py               # Vote record ingestion
+│   │   │   ├── verify.py               # Adversarial ML hardening
+│   │   │   ├── receipts.py             # vote_proof, tally_anchor
+│   │   │   ├── data.py                 # Election simulation data
+│   │   │   └── scenario.py             # Election-specific scenarios
+│   │   │
+│   │   ├── claim/                      # ClaimProof → Module (P1)
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py               # Government claims constants
+│   │   │   ├── ingest.py               # Claim ingestion
+│   │   │   ├── verify.py               # Political pressure modeling
+│   │   │   ├── receipts.py             # claim_proof receipts
+│   │   │   ├── data.py                 # Claims simulation data
+│   │   │   └── scenario.py             # Claims-specific scenarios
+│   │   │
+│   │   ├── safety/                     # SafetyProof → Module (P1)
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py               # Pharmacovigilance constants
+│   │   │   ├── ingest.py               # VAERS/FAERS ingestion
+│   │   │   ├── verify.py               # ZK patient privacy
+│   │   │   ├── receipts.py             # safety_proof, adverse_event
+│   │   │   ├── data.py                 # Pharma simulation data
+│   │   │   └── scenario.py             # Pharma-specific scenarios
+│   │   │
+│   │   ├── coin/                       # CoinProof → Module (P1)
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py               # Crypto verification constants
+│   │   │   ├── ingest.py               # Wallet transaction ingestion
+│   │   │   ├── verify.py               # Ownership clustering via compression
+│   │   │   ├── receipts.py             # wallet_cluster, revenue_share
+│   │   │   ├── data.py                 # Crypto simulation data
+│   │   │   └── scenario.py             # Crypto-specific scenarios
+│   │   │
+│   │   ├── origin/                     # OriginProof → Module (P1)
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py               # Supply chain constants
+│   │   │   ├── ingest.py               # Tier boundary ingestion
+│   │   │   ├── verify.py               # Multi-tier authentication
+│   │   │   ├── receipts.py             # tier_auth, origin_chain
+│   │   │   ├── data.py                 # Supply chain simulation data
+│   │   │   └── scenario.py             # Supply chain-specific scenarios
+│   │   │
+│   │   ├── graft/                      # GraftProof → Module (P1)
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py               # Corruption tracking constants
+│   │   │   ├── ingest.py               # Case lifecycle ingestion
+│   │   │   ├── verify.py               # Whistleblower privacy
+│   │   │   ├── receipts.py             # graft_proof, case_chain
+│   │   │   ├── data.py                 # Corruption simulation data
+│   │   │   └── scenario.py             # Corruption-specific scenarios
+│   │   │
+│   │   ├── warrant/                    # WarrantProof → Module (P1)
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py               # Military efficiency constants
+│   │   │   ├── ingest.py               # Defense contract ingestion
+│   │   │   ├── verify.py               # Lifecycle accountability
+│   │   │   ├── receipts.py             # warrant_proof, cost_savings
+│   │   │   ├── data.py                 # Military simulation data
+│   │   │   └── scenario.py             # Military-specific scenarios
+│   │   │
+│   │   ├── lab/                        # LabProof → Module (P2)
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py               # Scientific reproducibility constants
+│   │   │   ├── ingest.py               # Protocol ingestion
+│   │   │   ├── verify.py               # Federated baseline calibration
+│   │   │   ├── receipts.py             # lab_proof, replication_chain
+│   │   │   ├── data.py                 # Research simulation data
+│   │   │   └── scenario.py             # Research-specific scenarios
+│   │   │
+│   │   ├── defense/                    # EXISTING (from v1.0)
+│   │   │   └── ...
+│   │   │
+│   │   └── medicaid/                   # EXISTING (from v1.0)
+│   │       └── ...
+│   │
+│   ├── scenarios/                      # CROSS-MODULE SCENARIOS
+│   │   ├── __init__.py
+│   │   ├── contagion.py                # v5.1 contagion scenario
+│   │   ├── cross_domain.py             # Multi-module contagion (v6.0)
+│   │   ├── shell_cascade.py            # Shell entity propagation (v6.0)
+│   │   ├── temporal_stress.py          # Temporal decay at scale (v6.0)
+│   │   └── loop_learning.py            # LOOP effectiveness test (v6.0)
 │   │
 │   ├── # Core Detection
-│   ├── compress.py             # Entropy compression analysis
-│   ├── detect.py               # Multi-stage anomaly detection (+v5.1 resistance)
-│   ├── kolmogorov.py           # Algorithmic complexity
-│   ├── zkp.py                  # Zero-knowledge proofs
-│   ├── raf.py                  # Network cycle detection (+v5.1 super-graph)
-│   ├── holographic.py          # Boundary-only detection
-│   ├── thompson.py             # Bayesian audit sampling
-│   ├── ledger.py               # Merkle ledger + Bekenstein bounds
-│   ├── bridge.py               # Cross-branch translation
-│   ├── sim.py                  # Scenario simulation engine
+│   ├── compress.py                     # Entropy compression analysis
+│   ├── detect.py                       # Multi-stage anomaly detection
+│   ├── kolmogorov.py                   # Algorithmic complexity
+│   ├── zkp.py                          # Zero-knowledge proofs
+│   ├── raf.py                          # Network cycle detection
+│   ├── holographic.py                  # Boundary-only detection
+│   ├── thompson.py                     # Bayesian audit sampling
+│   ├── ledger.py                       # Merkle ledger + Bekenstein bounds
+│   ├── bridge.py                       # Cross-branch translation
+│   ├── sim.py                          # Scenario simulation engine
 │   │
 │   ├── # v4.0 User-Friendly
-│   ├── insight.py              # Plain-language explanations
-│   ├── fitness.py              # Self-improving pattern tracking
-│   ├── guardian.py             # Evidence quality gates
-│   ├── freshness.py            # Evidence staleness detection
-│   ├── learner.py              # Cross-domain pattern transfer
+│   ├── insight.py                      # Plain-language explanations
+│   ├── fitness.py                      # Self-improving pattern tracking
+│   ├── guardian.py                     # Evidence quality gates
+│   ├── freshness.py                    # Evidence staleness detection
+│   ├── learner.py                      # Cross-domain pattern transfer
 │   │
 │   ├── # Integration
-│   ├── usaspending_etl.py      # USASpending.gov integration
-│   ├── sam_validator.py        # SAM.gov vendor validation
+│   ├── usaspending_etl.py              # USASpending.gov integration
+│   ├── sam_validator.py                # SAM.gov vendor validation
 │   │
-│   ├── domains/                # Domain-specific modules
+│   ├── domains/                        # Legacy domain-specific modules
 │   │   ├── __init__.py
-│   │   ├── defense/            # Defense spending domain
-│   │   │   ├── config.yaml
-│   │   │   ├── data.py
-│   │   │   ├── receipts.py
-│   │   │   ├── scenarios.py
-│   │   │   ├── schema.py
-│   │   │   └── volatility.py
-│   │   └── medicaid/           # Medicaid spending domain
-│   │       ├── config.yaml
-│   │       ├── data.py
-│   │       ├── receipts.py
-│   │       ├── scenarios.py
-│   │       ├── schema.py
-│   │       └── volatility.py
+│   │   ├── defense/                    # Defense spending domain
+│   │   └── medicaid/                   # Medicaid spending domain
 │   │
-│   ├── shipyard/               # Trump-class battleship module
-│   │   ├── constants.py        # Verified values with citations
-│   │   ├── receipts.py         # 8 shipbuilding receipt types
-│   │   ├── lifecycle.py        # Keel-to-delivery state machine
-│   │   ├── assembly.py         # Block welding + robotics
-│   │   ├── additive.py         # 3D printing validation
-│   │   ├── iterate.py          # SpaceX-style rapid iteration
-│   │   ├── nuclear.py          # SMR reactor installation
-│   │   ├── procurement.py      # Contract management
-│   │   └── sim_shipyard.py     # Monte Carlo simulation
+│   ├── shipyard/                       # Trump-class battleship module
+│   │   └── ...
 │   │
-│   └── razor/                  # Kolmogorov validation engine
-│       ├── core.py             # RAZOR constants and receipts
-│       ├── cohorts.py          # Historical fraud cohorts
-│       ├── ingest.py           # USASpending API client
-│       ├── physics.py          # Compression metrics
-│       └── validate.py         # Statistical validation
+│   └── razor/                          # Kolmogorov validation engine
+│       └── ...
 │
-├── schemas/                    # Ledger schema definitions
+├── schemas/                            # Ledger schema definitions
 │   ├── ledger_schema_domains.json
 │   ├── ledger_schema_razor.json
 │   └── ledger_schema_shipyard.json
 │
-├── tests/                      # Unified test suite
+├── tests/                              # Unified test suite
 │   ├── conftest.py
-│   ├── test_compress.py
-│   ├── test_detect.py
-│   ├── test_v4_modules.py
-│   ├── test_shipyard_*.py
-│   ├── test_core_*.py
-│   ├── test_modules_*.py
-│   └── test_*.py
+│   ├── test_core_contagion.py          # Contagion tests (v6.0)
+│   ├── test_core_gate.py               # Gate tests (v6.0)
+│   ├── test_core_loop.py               # LOOP tests (v6.0)
+│   ├── test_core_zk.py                 # ZK tests (v6.0)
+│   ├── test_modules_doge.py            # DOGE module tests
+│   ├── test_modules_spend.py           # Spend module tests
+│   ├── test_modules_green.py           # Green module tests
+│   ├── test_modules_benefit.py         # Benefit module tests
+│   ├── test_modules_vote.py            # Vote module tests
+│   ├── test_modules_claim.py           # Claim module tests
+│   ├── test_modules_safety.py          # Safety module tests
+│   ├── test_modules_coin.py            # Coin module tests
+│   ├── test_modules_origin.py          # Origin module tests
+│   ├── test_modules_graft.py           # Graft module tests
+│   ├── test_modules_warrant.py         # Warrant module tests
+│   ├── test_modules_lab.py             # Lab module tests
+│   ├── test_scenarios_cross_domain.py  # Cross-domain tests
+│   └── ...
 │
-├── data/                       # Data and citations
-│   └── citations/
-│
-└── gate.sh                     # Unified execution gate runner
+└── data/                               # Data and citations
+    └── citations/
+```
+
+---
+
+## Core Infrastructure (v6.0)
+
+### core/constants.py
+
+Universal constants for all modules:
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| LAMBDA_NATURAL | 0.005 | Monthly decay rate |
+| RESISTANCE_THRESHOLD | 1.5 | Flag if resistance > threshold |
+| ZOMBIE_DAYS | 180 | Days without activity = zombie |
+| GATE_T2H_SECONDS | 7200 | 2-hour challenge window |
+| GATE_T24H_SECONDS | 86400 | 24-hour validation |
+| GATE_T48H_SECONDS | 172800 | 48-hour finalization |
+| ENTROPY_FLOOR | 0.1 | Below = suspicious uniformity |
+| ENTROPY_CEILING | 0.85 | Above = suspicious chaos |
+| COMPRESSION_THRESHOLD | 0.75 | Minimum viable compression |
+| ZK_CURVE | "BN254" | Groth16 curve |
+| ZK_SECURITY_BITS | 128 | Security level |
+| ANCHOR_BATCH_SIZE | 1000 | Receipts per Merkle batch |
+| LOOP_CYCLE_SECONDS | 60 | LOOP cycle frequency |
+| LOOP_WOUND_THRESHOLD | 5 | Occurrences before automation |
+| CONTAGION_PROPAGATION_DEPTH | 3 | Max hop depth |
+| CONTAGION_AMPLIFICATION | 1.22 | 22% sensitivity boost |
+| SHELL_OVERLAP_THRESHOLD | 0.05 | 5% overlap = shared shell |
+
+### Module Identifiers
+
+```python
+ALL_MODULES = [
+    "doge", "spend", "green", "benefit",
+    "vote", "claim", "safety", "coin",
+    "origin", "graft", "warrant", "lab",
+    "defense", "medicaid"
+]
+```
+
+---
+
+## New Core Modules (v6.0)
+
+### core/contagion.py
+
+Cross-module fraud propagation via super-graph.
+
+| Function | Purpose |
+|----------|---------|
+| `build_super_graph(graphs)` | Merge module RAF graphs into unified super-graph |
+| `identify_shared_entities(super_graph)` | Find entities appearing in multiple modules |
+| `propagate_contagion(super_graph, source_node, source_module)` | Propagate fraud signal via shared entities |
+| `calculate_propagation_path(super_graph, source, target)` | Shortest path across module boundaries |
+| `amplify_by_resistance(base_entropy, resistance)` | Multiply by (1 + resistance × 1.22) |
+| `preemptive_flag(super_graph, flagged_entity)` | Flag linked entities BEFORE local evidence |
+
+**Contagion Physics:**
+1. Build super-graph from all active module graphs
+2. Identify shared entities (appear in ≥2 modules)
+3. When fraud detected in module A:
+   - Calculate resistance to temporal decay
+   - Propagate amplified signal to linked entities
+   - Emit contagion_receipt with propagation path
+4. Preemptive flagging enables 2-4x earlier detection
+
+### core/gate.py
+
+Universal T+2h/24h/48h gate structure for all modules.
+
+| Function | Purpose |
+|----------|---------|
+| `open_gate(gate_type, receipt_id, module)` | Open a gate for a receipt |
+| `challenge_gate(gate_id, challenger, evidence)` | Challenge before T+2h |
+| `resolve_challenge(gate_id, resolution)` | Resolve a challenged gate |
+| `finalize_gate(gate_id)` | Finalize after T+48h |
+| `get_gate_status(gate_id)` | Return current status and timing |
+| `batch_finalize(gate_ids)` | Batch finalize multiple gates |
+
+**Gate States:**
+
+| State | Timing | Description |
+|-------|--------|-------------|
+| pending | T+0 → T+2h | Open for challenges |
+| challenged | Any time during pending | Challenge submitted |
+| resolved | After challenge review | Challenge accepted/rejected |
+| finalized | T+48h if no valid challenges | Receipt is immutable |
+| rejected | After failed challenge | Receipt invalidated |
+
+### core/loop.py
+
+LOOP self-improvement layer.
+
+| Function | Purpose |
+|----------|---------|
+| `run_loop_cycle()` | Execute full SENSE→EMIT cycle |
+| `sense()` | Query receipt stream for L0-L3 receipts |
+| `analyze(receipts)` | Run anomaly detection, pattern extraction |
+| `harvest_wounds(days)` | Collect manual intervention patterns |
+| `synthesize_helper(pattern)` | Create helper blueprint from wound |
+| `calculate_risk(action)` | Return 0-1 risk score |
+| `request_approval(helper, risk)` | Submit for HITL approval if risk > 0.2 |
+| `actuate(approved_actions)` | Execute approved actions |
+| `measure_completeness()` | Return L0-L4 coverage scores |
+
+**LOOP Cycle (every 60 seconds):**
+1. SENSE: Query receipts from all modules
+2. ANALYZE: Run pattern detection
+3. HARVEST: Collect wound patterns
+4. HYPOTHESIZE: Synthesize helper blueprints
+5. GATE: Request approval for high-risk actions
+6. ACTUATE: Execute approved actions
+7. EMIT: Emit loop_cycle_receipt
+
+**Receipt Levels:**
+
+| Level | Name | Description |
+|-------|------|-------------|
+| L0 | Telemetry | Raw ingestion receipts |
+| L1 | Agent | Verification and detection receipts |
+| L2 | Decision | Brief and packet receipts |
+| L3 | Quality | Effectiveness and health receipts |
+| L4 | Meta | Loop cycle and completeness receipts |
+
+### core/zk.py
+
+Zero-knowledge privacy layer.
+
+| Function | Purpose |
+|----------|---------|
+| `generate_pedersen_commitment(value, blinding)` | Create Pedersen commitment |
+| `verify_pedersen_commitment(commitment, value, blinding)` | Verify commitment |
+| `create_range_proof(value, commitment, range_bits)` | Prove value in range |
+| `verify_range_proof(commitment, proof, range_bits)` | Verify range proof |
+| `create_conservation_proof(inputs, outputs)` | Prove sum equality |
+| `verify_conservation_proof(inputs, outputs, proof)` | Verify conservation |
+| `create_membership_proof(element, merkle_root, path)` | Prove set membership |
+| `verify_membership_proof(merkle_root, proof)` | Verify membership |
+
+**ZK Applications by Module:**
+
+| Module | ZK Application | Privacy Protected |
+|--------|----------------|-------------------|
+| spend | Conservation proofs | Actual disbursement amounts |
+| safety | Patient membership | Patient identifiers |
+| benefit | Recipient membership | Recipient identifiers |
+| graft | Whistleblower attestation | Whistleblower identity |
+| coin | Conflict attestation | Wallet ownership |
+
+---
+
+## Module Interface
+
+Every module in `modules/` implements this interface:
+
+**config.py:**
+- `MODULE_ID: str` - Unique module identifier
+- `MODULE_PRIORITY: int` - 0=critical, 1=important, 2=enhancement
+- `RECEIPT_TYPES: list[str]` - Receipt types this module emits
+- Domain-specific constants
+
+**ingest.py:**
+- `ingest(data: dict) → dict` - Ingest domain data, emit ingestion receipt
+- `batch_ingest(data_list: list[dict]) → list[dict]` - Batch ingestion
+
+**verify.py:**
+- `verify(claim: dict) → dict` - Verify domain claim, emit verification receipt
+- `batch_verify(claims: list[dict]) → list[dict]` - Batch verification
+
+**receipts.py:**
+- Receipt type dataclasses with all fields
+- `emit_MODULE_receipt(data: dict) → dict` - Emit domain receipt
+
+**data.py:**
+- `sample_MODULE_receipts(n: int, scenario: str) → list[dict]` - Generate sample data
+- `generate_fraud_scenario(scenario: str) → list[dict]` - Generate fraud test data
+
+**scenario.py:**
+- `run_MODULE_scenario(scenario: str) → dict` - Run domain-specific scenario
+- Returns: `{"passed": bool, "metrics": dict, "receipts": list}`
+
+---
+
+## Module Specifications
+
+### modules/doge/ (DOGEProof)
+
+**Purpose:** Verify government efficiency claims with pre+post causality pairs.
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| MODULE_ID | "doge" | Module identifier |
+| MODULE_PRIORITY | 0 | Critical |
+| CLAIM_THRESHOLD_USD | 1,000,000 | Extra verification threshold |
+| CHALLENGE_WINDOW_HOURS | 2 | T+2h challenge window |
+
+**Key Functions:**
+- `ingest_claim(claim, pre_state)` - Ingest with pre-state snapshot
+- `verify_causality(claim_id)` - Verify pre+post form valid pair
+- `verify_savings(claim_id, claimed_savings)` - Verify claimed vs actual
+
+### modules/spend/ (SpendProof)
+
+**Purpose:** Federal budget verification with ZK privacy.
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| MODULE_ID | "spend" | Module identifier |
+| MODULE_PRIORITY | 0 | Critical |
+| ENTROPY_THRESHOLD | 0.007 | Entropy delta trigger |
+
+**Key Functions:**
+- `verify_conservation(inputs, outputs)` - ZK proof sum equality
+- `verify_entropy_delta(before, after)` - Validate entropy bounds
+- `create_audit_compress(disbursements)` - 99% compression, 99.9% recall
+
+### modules/green/ (GreenProof)
+
+**Purpose:** Climate/ESG accountability verification.
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| MODULE_ID | "green" | Module identifier |
+| MODULE_PRIORITY | 0 | Critical |
+| EMISSIONS_VARIANCE_THRESHOLD | 0.15 | 15% variance from satellite |
+
+**Key Functions:**
+- `verify_emissions(claimed, satellite)` - Compare to satellite data
+- `verify_timeline(claim_chain)` - Verify temporal consistency
+- `detect_greenwashing(entity_id, claims)` - Detect via compression
+
+### modules/benefit/ (BenefitProof)
+
+**Purpose:** Government benefits verification (Medicaid focus).
+
+**Key Functions:**
+- `verify_qualification(recipient_id, criteria)` - Verify recipient qualifies
+- `verify_disbursement(disbursement, recipient)` - Verify to qualified recipient
+- `detect_fraud_pattern(entity_id, history)` - Detect via compression ratio
+
+### modules/coin/ (CoinProof)
+
+**Purpose:** Crypto wallet ownership verification.
+
+**Key Functions:**
+- `cluster_wallets(transactions)` - Cluster by transaction compression
+- `verify_separation(wallet_a, wallet_b)` - Verify truly separate
+- `detect_revenue_share(flow)` - Detect hidden sharing via compression
+- `zk_conflict_attestation(wallet, entity)` - ZK proof of conflict
+
+### modules/graft/ (GraftProof)
+
+**Purpose:** FBI public corruption case tracking.
+
+**Key Functions:**
+- `track_case(case_id, events)` - Track lifecycle with crypto chain
+- `verify_disposition(case_id)` - Verify proper disposition
+- `protect_whistleblower(report)` - ZK attestation protecting identity
+- `measure_staffing_impact(case_id)` - Measure staffing changes impact
+
+---
+
+## Receipt Types (82+ Total)
+
+### Core (12)
+warrant, quality_attestation, milestone, cost_variance, anchor, detection, compression, lineage, bridge, simulation, anomaly, violation
+
+### v2 Physics (8)
+threshold, pattern_emergence, entropy_tree, cascade_alert, epidemic_warning, holographic, meta_receipt, mutual_info
+
+### v3 OMEGA (12)
+kolmogorov, zkp, raf, das, adversarial, usaspending, layout_entropy, sam_validation, catalytic, holographic_da, thompson_audit, bekenstein
+
+### v4 User-Friendly (17)
+insight, fitness, health, quality, abstain, counter_evidence, integrity, gate, freshness, refresh_priority, monitoring, pattern_match, transfer, learn, library_summary, prune
+
+### v5.1 Temporal (5)
+temporal_anomaly_receipt, zombie_receipt, contagion_receipt, super_graph_receipt, insight_receipt
+
+### v6.0 Module Receipts (20+)
+| Receipt | Module | Purpose |
+|---------|--------|---------|
+| doge_proof | doge | Verified efficiency claim |
+| qed_claim | doge | QED compression claim |
+| disbursement_proof | spend | ZK-verified disbursement |
+| audit_compress | spend | Compressed audit |
+| green_proof | green | Verified emissions |
+| emissions_anchor | green | Satellite-anchored emissions |
+| benefit_disburse | benefit | Verified benefit disbursement |
+| fraud_compress | benefit | Compressed fraud pattern |
+| vote_proof | vote | Verified ballot |
+| tally_anchor | vote | Anchored tally |
+| claim_proof | claim | Verified government claim |
+| safety_proof | safety | ZK patient safety event |
+| adverse_event | safety | Adverse event anchor |
+| wallet_cluster | coin | Wallet cluster detection |
+| revenue_share | coin | Revenue sharing detection |
+| tier_auth | origin | Tier authentication |
+| origin_chain | origin | Provenance chain |
+| graft_proof | graft | Corruption case proof |
+| case_chain | graft | Case lifecycle chain |
+| warrant_proof | warrant | Military contract proof |
+| lab_proof | lab | Replication proof |
+
+### v6.0 Core Receipts (4)
+| Receipt | Purpose |
+|---------|---------|
+| contagion_receipt | Cross-domain fraud propagation |
+| loop_cycle_receipt | LOOP cycle completion |
+| gate_receipt | Gate status change |
+| zk_proof_receipt | ZK verification result |
+
+### Shipyard (8)
+keel, block, additive, iteration, milestone, procurement, propulsion, delivery
+
+### RAZOR (5)
+ingest, cohort, compression, validation, signal
+
+### Domain (5)
+domain_receipt, domain_simulation, domain_scenario, domain_validation, domain_volatility
+
+---
+
+## Cross-Module Scenarios (v6.0)
+
+### scenarios/cross_domain.py
+
+| Scenario | Modules | Test Case |
+|----------|---------|-----------|
+| SHELL_CASCADE | doge, spend, benefit | Shell company in all three. Detection in benefit triggers preemptive flags. |
+| CRYPTO_CORRUPTION | coin, graft | Wallet cluster linked to corruption. Detection in graft flags wallets. |
+| ESG_SUPPLY_CHAIN | green, origin | Emissions linked to fraudulent supply chain. Detection invalidates green claim. |
+| MILITARY_BENEFIT | warrant, benefit | Defense contractor = Medicaid provider. Cross-domain anomaly. |
+
+**run_cross_domain_scenario returns:**
+```python
+{
+    "passed": bool,
+    "contagion_detected": bool,
+    "preemptive_flags": int,
+    "detection_speedup_factor": float,  # 2-4x earlier
+    "modules_affected": list[str],
+    "receipts": list[dict]
+}
 ```
 
 ---
@@ -167,43 +689,31 @@ gov-os scenario --run BASELINE          # Run simulation scenario
 gov-os export --scenario BASELINE       # Export results
 ```
 
-### v4.0 User-Friendly Commands
+### Module Commands (v6.0)
 
 ```bash
-gov-os explain --demo                   # Plain-language demo
-gov-os health                           # System health check
-gov-os patterns --list                  # View fraud patterns
-gov-os freshness --demo                 # Evidence freshness demo
+gov-os doge ingest --claim FILE         # Ingest efficiency claim
+gov-os doge verify --claim-id ID        # Verify claim causality
+gov-os doge scenario BASELINE           # Run DOGE scenario
+
+gov-os spend verify --conservation      # Verify ZK conservation
+gov-os spend audit --compress           # Create compressed audit
+
+gov-os green verify --emissions FILE    # Verify emissions claim
+gov-os green detect-greenwashing ID     # Detect greenwashing
+
+gov-os contagion --run SHELL_CASCADE    # Run contagion scenario
+gov-os loop --cycle                     # Run LOOP cycle
+gov-os gate --status GATE_ID            # Check gate status
 ```
 
 ### Domain Commands
 
 ```bash
 gov-os defense simulate --cycles 100    # Defense domain simulation
-gov-os defense scenario BASELINE        # Run defense scenario
-gov-os defense scenarios                # Run all defense scenarios
-
-gov-os medicaid simulate --cycles 100   # Medicaid domain simulation
 gov-os medicaid scenario PROVIDER_RING  # Run medicaid scenario
-
 gov-os validate --domain all            # Validate all domains
 gov-os list domains                     # List available domains
-```
-
-### RAZOR Commands
-
-```bash
-gov-os razor --test                     # RAZOR quick test
-gov-os razor --gate api                 # API connectivity gate
-gov-os razor --gate compression         # Compression analysis gate
-gov-os razor --cohorts                  # List fraud cohorts
-```
-
-### Shipyard Commands
-
-```bash
-gov-os shipyard --status                # Program status
-gov-os shipyard --simulate              # Run simulation
 ```
 
 ---
@@ -218,242 +728,10 @@ gov-os shipyard --simulate              # Run simulation
 | ZKP Proof Size | 22 KB constant | N/A | Mina IVC |
 | Evidence Freshness | > 90 days = stale | < 30 days = fresh | v4.0 |
 | Pattern Confidence | > 0.50 match | N/A | v4.0 learner |
-| Decay Resistance | > 0.10 = anomaly | <= 0.10 | v5.1 temporal |
-| Zombie Days | > 365 days dormant | N/A | v5.1 temporal |
-| Contagion Overlap | >= 5% shared entities | N/A | v5.1 temporal |
-
----
-
-## Module Inventory
-
-### Core Detection (src/)
-
-| Module | Purpose |
-|--------|---------|
-| core.py | Hash, receipts, citations, constants |
-| compress.py | Entropy compression analysis |
-| detect.py | Multi-stage anomaly detection |
-| kolmogorov.py | Algorithmic complexity |
-| zkp.py | Zero-knowledge proofs |
-| raf.py | Network cycle detection |
-| holographic.py | Boundary-only detection |
-| thompson.py | Bayesian audit sampling |
-
-### v4.0 User-Friendly (src/)
-
-| Module | Purpose |
-|--------|---------|
-| insight.py | Plain-language explanations |
-| fitness.py | Self-improving pattern tracking |
-| guardian.py | Evidence quality gates |
-| freshness.py | Evidence staleness detection |
-| learner.py | Cross-domain pattern transfer |
-
-### v5.1 Temporal Physics (src/core/)
-
-| Module | Purpose |
-|--------|---------|
-| temporal.py | Exponential decay physics, resistance detection |
-| insight.py | Plain-English fraud explanations |
-| harness.py | Simulation state and scenario execution |
-| constants.py | All physics constants including LAMBDA_NATURAL |
-
-### v5.1 Scenarios (src/scenarios/)
-
-| Module | Purpose |
-|--------|---------|
-| contagion.py | Cross-domain super-graph contagion detection |
-
-### Domains (src/domains/)
-
-| Domain | Purpose |
-|--------|---------|
-| defense | Defense spending, military contracts |
-| medicaid | Healthcare spending, provider payments |
-
-### Shipyard (src/shipyard/)
-
-| Module | Purpose |
-|--------|---------|
-| constants.py | Verified values with citations |
-| receipts.py | 8 shipbuilding receipt types |
-| lifecycle.py | Keel-to-delivery state machine |
-| assembly.py | Block welding + robotics |
-| additive.py | 3D printing validation |
-| iterate.py | SpaceX-style rapid iteration |
-| nuclear.py | SMR reactor installation |
-| procurement.py | Contract management |
-| sim_shipyard.py | Monte Carlo simulation |
-
-### RAZOR (src/razor/)
-
-| Module | Purpose |
-|--------|---------|
-| core.py | Constants, receipts, hashing |
-| cohorts.py | Historical fraud cohort definitions |
-| ingest.py | USASpending.gov API client |
-| physics.py | Kolmogorov complexity measurement |
-| validate.py | Statistical signal detection |
-
----
-
-## Domain Architecture
-
-Domains are plug-in modules that adapt the core physics engine to specific spending domains.
-
-### Domain Structure
-
-Each domain provides:
-- `config.yaml`: Domain configuration
-- `volatility.py`: Domain-specific volatility index
-- `schema.py`: Data schemas
-- `receipts.py`: Domain receipt types
-- `scenarios.py`: Domain scenarios
-- `data.py`: Simulated data generators
-
-### Adding a New Domain
-
-1. Create `src/domains/{name}/config.yaml`
-2. Implement `volatility.py` with `get_primary_volatility()`
-3. Implement `schema.py` with data schemas
-4. Implement `receipts.py` with receipt types
-5. Implement `scenarios.py` with test scenarios
-6. Register in `src/domains/__init__.py`
-
----
-
-## Shipyard Module: Trump-Class Program
-
-The Shipyard module tracks the announced $200B, 22-ship battleship program.
-
-### Program Constants (Cited)
-
-| Constant | Value | Citation |
-|----------|-------|----------|
-| TRUMP_CLASS_PROGRAM_COST_B | $200B | TRUMP_2025 |
-| TRUMP_CLASS_SHIP_COUNT | 22 ships | TRUMP_2025 |
-| TRUMP_CLASS_PER_SHIP_B | $9.09B/ship | Derived |
-| FORD_CVN78_OVERRUN_PCT | 23% | GAO_2022 |
-| ZUMWALT_COST_INCREASE_PCT | 81% | GAO_2018 |
-
-### Shipyard Receipt Types (8)
-
-| Receipt | Trigger | Key Fields |
-|---------|---------|------------|
-| keel | Ship construction start | ship_id, hull_number |
-| block | Hull section assembly | block_id, welds, inspection |
-| additive | 3D printed section | material, layer_hash |
-| iteration | Design cycle complete | iteration_count, delta |
-| milestone | Phase complete | phase, cost_to_date |
-| procurement | Contract action | contract_type, amount |
-| propulsion | Reactor installation | reactor_type, power_mwe |
-| delivery | Ship handoff | final_cost, variance_pct |
-
----
-
-## RAZOR Validation Engine
-
-RAZOR validates fraud detection against real USASpending.gov data using compression-based analysis.
-
-### The Paradigm
-
-```
-Corrupt markets are ordered. Order compresses.
-Honest markets are chaotic. Chaos resists compression.
-
-K(x) = len(compressed) / len(original)
-
-The compression ratio IS the proof.
-```
-
-### Historical Fraud Cohorts
-
-| Cohort | Years | Pattern | Expected Signal |
-|--------|-------|---------|-----------------|
-| Fat Leonard (GDMA) | 2006-2013 | Repetitive billing | Z < -2.0 |
-| TransDigm | 2015-2019 | Price gouging | Price/estimate > 2x |
-| Boeing/Druyun | 2000-2003 | Conflict of interest | Approval anomaly |
-
----
-
-## v4.0 User-Friendly Features
-
-### Plain-Language Explanations (insight.py)
-
-```
-Technical: compression_ratio=0.42, kolmogorov=0.38, entropy=5.2
-Plain: "This contract appears to involve copied or templated billing.
-       The billing records show unusually repetitive patterns."
-```
-
-### Evidence Freshness (freshness.py)
-
-| Level | Age | Confidence |
-|-------|-----|------------|
-| Fresh | < 30 days | 100% |
-| Recent | 30-60 days | 90% |
-| Aging | 60-90 days | 70% |
-| Stale | 90-180 days | 40% |
-| Expired | > 180 days | 10% |
-
-### Cross-Domain Pattern Transfer (learner.py)
-
-| Pattern | Source Case | Transferability |
-|---------|-------------|-----------------|
-| Repetitive Billing | Fat Leonard | 85% |
-| Price Gouging | TransDigm | 90% |
-| Shell Company | General | 95% |
-| Conflict of Interest | Boeing/Druyun | 75% |
-| Cost Escalation | General | 80% |
-
----
-
-## Receipt Types (67 Total)
-
-### Core (12)
-warrant, quality_attestation, milestone, cost_variance, anchor, detection, compression, lineage, bridge, simulation, anomaly, violation
-
-### v2 Physics (8)
-threshold, pattern_emergence, entropy_tree, cascade_alert, epidemic_warning, holographic, meta_receipt, mutual_info
-
-### v3 OMEGA (12)
-kolmogorov, zkp, raf, das, adversarial, usaspending, layout_entropy, sam_validation, catalytic, holographic_da, thompson_audit, bekenstein
-
-### v4 User-Friendly (17)
-insight, fitness, health, quality, abstain, counter_evidence, integrity, gate, freshness, refresh_priority, monitoring, pattern_match, transfer, learn, library_summary, prune
-
-### Shipyard (8)
-keel, block, additive, iteration, milestone, procurement, propulsion, delivery
-
-### RAZOR (5)
-ingest, cohort, compression, validation, signal
-
-### Domain (5)
-domain_receipt, domain_simulation, domain_scenario, domain_validation, domain_volatility
-
----
-
-## Scenarios
-
-### Core Scenarios
-
-| Scenario | Purpose | Pass Criteria |
-|----------|---------|---------------|
-| BASELINE | Standard procurement | compression >= 0.85, recall >= 0.90 |
-| SHIPYARD_STRESS | Trump-class simulation | detect fraud by ship 10 |
-| CROSS_BRANCH_INTEGRATION | Multi-system | zero proof failures |
-| FRAUD_DISCOVERY | Novel patterns | legitimate >= 0.80, fraud <= 0.40 |
-| GODEL | Edge cases | no crashes, stoprules trigger |
-| AUTOCATALYTIC | Pattern emergence | N_critical < 10,000 |
-| THOMPSON | Bayesian calibration | FP <= 2% |
-| HOLOGRAPHIC | Boundary detection | p > 0.9999 |
-
-### Domain Scenarios
-
-Each domain provides:
-- BASELINE: Standard operation
-- STRESS: High volume
-- FRAUD_INJECTION: Synthetic fraud
+| Decay Resistance | > 1.5 = anomaly | <= 1.0 | v6.0 temporal |
+| Zombie Days | > 180 days dormant | N/A | v6.0 temporal |
+| Contagion Overlap | >= 5% shared entities | N/A | v6.0 contagion |
+| LOOP Completeness | >= 99.9% L0-L4 | N/A | v6.0 LOOP |
 
 ---
 
@@ -470,9 +748,19 @@ All gates are run via the unified `gate.sh` script:
 
 | Gate | Requirement | Checks |
 |------|-------------|--------|
-| T+2h | Skeleton working | Core files, CLI, disclaimers, citations, all modules |
-| T+24h | MVP complete | Tests, smoke tests, simulations, domain validation |
-| T+48h | Hardened | Full test suite, scenarios, memory check |
+| T+2h | Skeleton working | Core files, CLI, all modules importable |
+| T+24h | MVP complete | Tests pass, smoke tests, simulations |
+| T+48h | Hardened | Full test suite, scenarios, coverage ≥80% |
+
+### v6.0 Gate Phases
+
+| Phase | Gate | Requirements |
+|-------|------|--------------|
+| Phase 1 | 1.1 | Core skeleton (contagion, gate, loop, zk) |
+| Phase 1 | 1.2 | Core functions pass tests |
+| Phase 2 | 2.1-2.4 | P0 modules (doge, spend, green, benefit) |
+| Phase 3 | 3.1-3.3 | P1 modules (vote, claim, safety, coin, origin, graft, warrant) |
+| Phase 4 | 4.1-4.3 | Cross-domain integration, LOOP, hardened |
 
 ---
 
@@ -489,50 +777,41 @@ K(x) >= 0.75 -> likely legitimate
 ```
 fitness = (H_before - H_after) / receipts_processed
 fitness > 0 -> pattern reduces uncertainty
-fitness < 0 -> pattern adds noise
 ```
 
-### N_critical (Phase Transition)
-```
-N_critical = log2(1/dH) x (H_legit / dH)
-When N > N_critical, patterns become distinguishable
-```
-
-### v5.1 Temporal Decay (Exponential)
+### Temporal Decay (v5.1/v6.0)
 ```
 Wt = W₀ × e^(-λt)
 
 λ = LAMBDA_NATURAL = 0.005 (per month)
-Half-life ≈ ln(2) / λ ≈ 138 months
 
-Physics: Legitimate relationships decay like radioactive atoms.
-Fraud maintains artificial weight over time.
-```
-
-### v5.1 Resistance to Decay
-```
 Resistance = max(0, (observed_weight / expected_weight) - 1.0)
-
-Resistance > 0.10 -> Anomaly: edge resisting natural decay
-Resistance = 0 -> Normal: edge decayed as expected
-
-Physics: Static edges in dynamic environments are low-entropy,
-high-information anomalies.
+Resistance > 1.5 -> Anomaly
 ```
 
-### v5.1 Cross-Domain Contagion
+### Cross-Domain Contagion (v6.0)
 ```
-When Medicaid ring collapses:
-  → Shell entity links domains
-  → Temporal rigidity propagates to Defense
-  → Pre-invoice flag on Defense entities
+When fraud detected in module A:
+  → Identify shared entities across modules
+  → Amplify by resistance: signal × (1 + resistance × 1.22)
+  → Propagate to linked entities in modules B, C, ...
+  → Preemptive flag BEFORE local evidence
 
-Detection: 2-4x earlier via domain correlation
+Detection improvement: 2-4x earlier via contagion propagation
+```
+
+### LOOP Completeness (v6.0)
+```
+Completeness = coverage(L0, L1, L2, L3, L4) / 5
+
+When L4 >= 99.9% and L4 feeds back to L0:
+  → Computational sovereignty achieved
+  → System is self-auditing
 ```
 
 ---
 
-## Version History
+## Version History (Detailed)
 
 | Version | Date | Changes |
 |---------|------|---------|
@@ -543,31 +822,7 @@ Detection: 2-4x earlier via domain correlation
 | 4.0.0 | 2024-12-23 | User-friendly: insight, fitness, guardian, freshness, learner |
 | 5.0.0 | 2024-12-23 | Unification: Single cohesive platform with domain modules |
 | 5.1.0 | 2024-12-23 | Temporal: Decay physics, resistance detection, cross-domain contagion |
-
----
-
-## v5.1 Temporal Physics Constants
-
-| Constant | Value | Description |
-|----------|-------|-------------|
-| LAMBDA_NATURAL | 0.005 | Monthly decay rate (half-life ≈ 138 months) |
-| RESISTANCE_THRESHOLD | 0.10 | Flag when resistance exceeds 10% |
-| ZOMBIE_DAYS | 365 | Dormancy threshold for zombie detection |
-| CONTAGION_OVERLAP_MIN | 0.05 | Minimum 5% shared entities for contagion scan |
-| SHELL_PATTERN_THRESHOLD | 2 | Minimum domains to classify entity as shell |
-| ENTROPY_RESISTANCE_MULTIPLIER | 1.22 | +22% sensitivity boost from resistance |
-
----
-
-## v5.1 Receipt Types (5 new)
-
-| Receipt | Purpose | Key Fields |
-|---------|---------|------------|
-| temporal_anomaly_receipt | Decay resistance detected | resistance, days_since_last, expected_weight |
-| zombie_receipt | Dormant entity with preserved weight | days_dormant, preserved_weight, linked_domains |
-| contagion_receipt | Cross-domain fraud propagation | source_domain, target_domain, shell_entity |
-| super_graph_receipt | Multi-domain graph merge | domains, shared_entities, cycles_detected |
-| insight_receipt | Plain-English explanation | plain_english, confidence, audit_ready |
+| 6.0.0 | 2024-12-23 | ProofChain: 12 modules unified, contagion, gate, loop, zk |
 
 ---
 
