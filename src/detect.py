@@ -29,10 +29,15 @@ from .core import (
     DISCLAIMER,
     CITATIONS,
     PATTERN_COHERENCE_MIN,
+    KOLMOGOROV_THRESHOLD,
     dual_hash,
     emit_receipt,
     get_citation,
 )
+
+# OMEGA v3 imports
+from .zkp import generate_proof, verify_proof, ZKProof
+from .kolmogorov import calculate_kolmogorov, detect_generator_pattern
 
 # Import v2 autocatalytic functions
 from .autocatalytic import (
@@ -483,6 +488,124 @@ def pattern_match(receipt: dict, patterns: list) -> list:
     # Delegate to scan for backward compatibility
     matches = scan([receipt])
     return [m.get("anomaly_type", "") for m in matches]
+
+
+# === OMEGA v3: ZKP VERIFICATION GATE ===
+
+def zkp_verification_gate(
+    transaction: dict,
+    state_prev: dict,
+    state_next: dict,
+    witness: dict = None
+) -> dict:
+    """
+    OMEGA v3: ZKP verification gate for fraud detection.
+    If proof invalid, override statistical fraud score with cryptographic certainty.
+
+    This is the paradigm shift: Detection -> Prevention.
+    Invalid transactions are rejected, not just flagged.
+
+    Args:
+        transaction: Transaction to verify
+        state_prev: Previous ledger state
+        state_next: Expected next state
+        witness: Private witness data (optional, simulated)
+
+    Returns:
+        Verification result dict
+    """
+    if witness is None:
+        # Extract witness from transaction
+        witness = {
+            "amount": transaction.get("amount_usd", 0),
+            "vendor_signature": transaction.get("vendor_signature"),
+            "sam_verified": transaction.get("sam_verified", True),
+        }
+
+    # Generate proof
+    proof = generate_proof(state_prev, state_next, witness)
+
+    # Verify proof
+    is_valid = verify_proof(proof, state_prev, state_next)
+
+    result = {
+        "zkp_valid": is_valid,
+        "proof_size_bytes": proof.size_bytes,
+        "circuit_satisfied": proof.circuit_constraints_satisfied,
+        "fraud_detected": not is_valid,
+        "detection_method": "zkp_cryptographic",
+        "confidence": 1.0 if not is_valid else 0.0,  # Cryptographic certainty
+    }
+
+    # If proof invalid, this is definitive fraud detection
+    if not is_valid:
+        result["fraud_reason"] = "ZKP proof verification failed - transaction mathematically impossible"
+        result["action"] = "reject_transaction"
+
+    return result
+
+
+def detect_with_zkp_gate(
+    receipts: list,
+    mode: str = 'omega'
+) -> list:
+    """
+    OMEGA v3: Fraud detection with ZKP verification gate.
+    Combines Kolmogorov complexity, RAF detection, and ZKP verification.
+
+    Args:
+        receipts: Receipts to analyze
+        mode: 'omega' = full OMEGA pipeline, 'hybrid' = omega + v2 fallback
+
+    Returns:
+        List of fraud detections
+    """
+    detections = []
+
+    # Step 1: Kolmogorov complexity check
+    K = calculate_kolmogorov(str(receipts))
+    if K < KOLMOGOROV_THRESHOLD:
+        generator_result = detect_generator_pattern(receipts)
+        if generator_result.get("generator_detected"):
+            detections.append({
+                "anomaly_type": "kolmogorov_scripted",
+                "confidence": 0.9,
+                "K_complexity": K,
+                "pattern": generator_result.get("pattern_description", ""),
+                "detection_mode": "omega_kolmogorov",
+                "citation": get_citation("SHANNON_1948"),
+                "simulation_flag": DISCLAIMER,
+            })
+
+    # Step 2: For each transaction-like receipt, verify ZKP
+    for i, receipt in enumerate(receipts):
+        if receipt.get("receipt_type") == "warrant" and receipt.get("amount_usd"):
+            # Simulate state transition
+            state_prev = {"balance": 1000000000}  # Simulated
+            state_next = {"balance": state_prev["balance"] - receipt.get("amount_usd", 0)}
+
+            zkp_result = zkp_verification_gate(receipt, state_prev, state_next)
+
+            if zkp_result.get("fraud_detected"):
+                detections.append({
+                    "anomaly_type": "zkp_invalid",
+                    "confidence": 1.0,  # Cryptographic certainty
+                    "receipt_index": i,
+                    "zkp_valid": False,
+                    "reason": zkp_result.get("fraud_reason", "ZKP verification failed"),
+                    "detection_mode": "omega_zkp",
+                    "action": "reject",
+                    "simulation_flag": DISCLAIMER,
+                })
+
+    # Step 3: If hybrid mode, also run v2 autocatalytic detection
+    if mode == 'hybrid':
+        v2_detections = autocatalytic_detect(receipts, mode='auto')
+        for d in v2_detections:
+            d["detection_mode"] = "v2_autocatalytic_fallback"
+            detections.append(d)
+
+    return detections
 
 
 # === DETECTION RECEIPT ===

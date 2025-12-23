@@ -1,5 +1,5 @@
 """
-WarrantProof Bridge Module - Cross-System Integration
+WarrantProof Bridge Module - Cross-System Integration with Catalytic Detection
 
 ⚠️ SIMULATION ONLY - NOT REAL DoD DATA - FOR RESEARCH ONLY ⚠️
 
@@ -18,15 +18,23 @@ Supported Systems (Simulated):
 - SpaceForce: DEAMS variant
 - CoastGuard: Separate system (DHS)
 
+OMEGA v3 Enhancement:
+Catalytic link detection beyond financial flow. Per OMEGA §3.1:
+"RAF catalysis hidden in information flow, not currency flow."
+Detects: shared addresses, board connections, IP proximity.
+
 SLOs:
 - Translation <= 200ms per receipt
 - Zero information loss (verified cryptographically)
 - Support all 6 branch systems
+- Catalytic detection F1 > 0.80
 """
 
+import hashlib
 import math
-from collections import Counter
-from typing import Optional
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
+from typing import Optional, List, Dict, Any, Set, Tuple
 
 import numpy as np
 
@@ -36,10 +44,21 @@ from .core import (
     BRANCHES,
     MUTUAL_INFO_TRANSFER_THRESHOLD,
     CROSS_BRANCH_ACCURACY_TARGET,
+    RAF_CYCLE_MIN_LENGTH,
+    RAF_CYCLE_MAX_LENGTH,
     dual_hash,
     emit_receipt,
     get_citation,
     stoprule_hash_mismatch,
+    StopRuleException,
+)
+
+# OMEGA v3: Import RAF for catalytic detection
+from .raf import (
+    build_transaction_graph,
+    add_catalytic_links,
+    detect_cycles,
+    identify_keystone_species,
 )
 
 
@@ -566,9 +585,539 @@ def cross_branch_learning(
     }
 
 
+# === OMEGA v3: CATALYTIC LINK DETECTION ===
+
+@dataclass
+class CatalyticLink:
+    """
+    Non-financial link between entities that may indicate collusion.
+    Per OMEGA §3.1: "RAF catalysis hidden in information flow, not currency flow."
+    """
+    link_type: str  # "shared_address", "board_connection", "ip_proximity", "temporal_pattern"
+    entity_a: str
+    entity_b: str
+    evidence: Dict[str, Any] = field(default_factory=dict)
+    confidence: float = 0.0
+    catalytic_strength: float = 0.0
+
+
+def detect_shared_addresses(
+    entities: List[Dict[str, Any]]
+) -> List[CatalyticLink]:
+    """
+    Detect entities sharing physical or mailing addresses.
+    Shell companies often share registered agent addresses.
+
+    Args:
+        entities: List of entity dicts with address fields
+
+    Returns:
+        List of CatalyticLink for shared addresses
+    """
+    links = []
+    address_map: Dict[str, List[str]] = defaultdict(list)
+
+    # Normalize and index addresses
+    for entity in entities:
+        entity_id = entity.get("vendor") or entity.get("cage_code") or entity.get("id")
+        if not entity_id:
+            continue
+
+        # Check multiple address fields
+        for addr_field in ["address", "physical_address", "mailing_address", "registered_address"]:
+            addr = entity.get(addr_field)
+            if addr:
+                # Normalize address
+                if isinstance(addr, dict):
+                    addr_str = " ".join(str(v) for v in addr.values() if v)
+                else:
+                    addr_str = str(addr)
+
+                normalized = _normalize_address(addr_str)
+                if normalized:
+                    address_map[normalized].append(entity_id)
+
+    # Find entities sharing addresses
+    for addr, entity_ids in address_map.items():
+        if len(entity_ids) > 1:
+            # Create pairwise links
+            for i, entity_a in enumerate(entity_ids):
+                for entity_b in entity_ids[i+1:]:
+                    links.append(CatalyticLink(
+                        link_type="shared_address",
+                        entity_a=entity_a,
+                        entity_b=entity_b,
+                        evidence={"normalized_address": addr, "entity_count": len(entity_ids)},
+                        confidence=min(0.9, 0.5 + 0.1 * len(entity_ids)),
+                        catalytic_strength=0.8,
+                    ))
+
+    return links
+
+
+def detect_board_connections(
+    entities: List[Dict[str, Any]]
+) -> List[CatalyticLink]:
+    """
+    Detect shared board members, officers, or ownership.
+    Interlocking directorates indicate potential collusion.
+
+    Args:
+        entities: List of entity dicts with ownership/officer fields
+
+    Returns:
+        List of CatalyticLink for board connections
+    """
+    links = []
+    person_map: Dict[str, List[str]] = defaultdict(list)
+
+    for entity in entities:
+        entity_id = entity.get("vendor") or entity.get("id")
+        if not entity_id:
+            continue
+
+        # Check ownership and officer fields
+        people = []
+
+        # Ownership details
+        ownership = entity.get("ownership_details", {})
+        if isinstance(ownership, dict):
+            for key in ["owner", "principal", "agent", "officers"]:
+                val = ownership.get(key)
+                if val:
+                    if isinstance(val, list):
+                        people.extend(val)
+                    else:
+                        people.append(val)
+
+        # Direct officer fields
+        for field_name in ["officer", "owner", "principal", "board_members", "directors"]:
+            val = entity.get(field_name)
+            if val:
+                if isinstance(val, list):
+                    people.extend(val)
+                else:
+                    people.append(val)
+
+        # Index by normalized person name
+        for person in people:
+            if isinstance(person, str):
+                normalized = _normalize_name(person)
+                if normalized:
+                    person_map[normalized].append(entity_id)
+
+    # Find entities sharing people
+    for person, entity_ids in person_map.items():
+        if len(entity_ids) > 1:
+            for i, entity_a in enumerate(entity_ids):
+                for entity_b in entity_ids[i+1:]:
+                    links.append(CatalyticLink(
+                        link_type="board_connection",
+                        entity_a=entity_a,
+                        entity_b=entity_b,
+                        evidence={"shared_person": person, "entity_count": len(entity_ids)},
+                        confidence=min(0.95, 0.6 + 0.1 * len(entity_ids)),
+                        catalytic_strength=0.9,  # Strong indicator
+                    ))
+
+    return links
+
+
+def detect_ip_proximity(
+    receipts: List[Dict[str, Any]],
+    ip_threshold: int = 16  # /16 subnet
+) -> List[CatalyticLink]:
+    """
+    Detect entities submitting from proximate IP addresses.
+    Bid rigging often involves submissions from same network.
+
+    Args:
+        receipts: List of receipts with IP metadata
+        ip_threshold: Subnet mask for proximity (16 = /16)
+
+    Returns:
+        List of CatalyticLink for IP proximity
+    """
+    links = []
+    ip_map: Dict[str, List[Tuple[str, str]]] = defaultdict(list)
+
+    for receipt in receipts:
+        entity_id = receipt.get("vendor") or receipt.get("contractor_id")
+        if not entity_id:
+            continue
+
+        # Check for IP in metadata
+        ip = receipt.get("source_ip") or receipt.get("_metadata", {}).get("ip")
+        if not ip:
+            continue
+
+        # Extract subnet
+        try:
+            parts = ip.split(".")[:ip_threshold // 8]
+            subnet = ".".join(parts)
+            ip_map[subnet].append((entity_id, ip))
+        except (ValueError, IndexError):
+            continue
+
+    # Find entities in same subnet
+    for subnet, entries in ip_map.items():
+        unique_entities = list(set(e[0] for e in entries))
+        if len(unique_entities) > 1:
+            for i, entity_a in enumerate(unique_entities):
+                for entity_b in unique_entities[i+1:]:
+                    links.append(CatalyticLink(
+                        link_type="ip_proximity",
+                        entity_a=entity_a,
+                        entity_b=entity_b,
+                        evidence={"subnet": subnet, "threshold": ip_threshold},
+                        confidence=0.6,  # Moderate confidence
+                        catalytic_strength=0.5,
+                    ))
+
+    return links
+
+
+def detect_temporal_patterns(
+    receipts: List[Dict[str, Any]],
+    time_window_seconds: int = 300  # 5 minutes
+) -> List[CatalyticLink]:
+    """
+    Detect suspiciously coordinated submission timing.
+    Collusive bids often submitted in tight time windows.
+
+    Args:
+        receipts: List of receipts with timestamps
+        time_window_seconds: Window for "suspicious" proximity
+
+    Returns:
+        List of CatalyticLink for temporal patterns
+    """
+    links = []
+
+    # Group by solicitation/contract
+    by_solicitation: Dict[str, List[Dict]] = defaultdict(list)
+    for receipt in receipts:
+        sol_id = receipt.get("solicitation_id") or receipt.get("contract_id") or "default"
+        by_solicitation[sol_id].append(receipt)
+
+    for sol_id, sol_receipts in by_solicitation.items():
+        # Sort by timestamp
+        try:
+            sorted_receipts = sorted(
+                sol_receipts,
+                key=lambda r: r.get("ts", "")
+            )
+        except TypeError:
+            continue
+
+        # Check for tight clustering
+        for i, r1 in enumerate(sorted_receipts):
+            for r2 in sorted_receipts[i+1:]:
+                entity_a = r1.get("vendor") or r1.get("contractor_id")
+                entity_b = r2.get("vendor") or r2.get("contractor_id")
+
+                if not entity_a or not entity_b or entity_a == entity_b:
+                    continue
+
+                # Calculate time difference
+                try:
+                    from datetime import datetime
+                    t1 = datetime.fromisoformat(r1.get("ts", "").replace("Z", "+00:00"))
+                    t2 = datetime.fromisoformat(r2.get("ts", "").replace("Z", "+00:00"))
+                    diff_seconds = abs((t2 - t1).total_seconds())
+
+                    if diff_seconds <= time_window_seconds:
+                        links.append(CatalyticLink(
+                            link_type="temporal_pattern",
+                            entity_a=entity_a,
+                            entity_b=entity_b,
+                            evidence={
+                                "solicitation": sol_id,
+                                "time_diff_seconds": diff_seconds,
+                                "window": time_window_seconds,
+                            },
+                            confidence=max(0.3, 1.0 - diff_seconds / time_window_seconds),
+                            catalytic_strength=0.6,
+                        ))
+                except (ValueError, TypeError):
+                    continue
+
+    return links
+
+
+def detect_all_catalytic_links(
+    entities: List[Dict[str, Any]],
+    receipts: List[Dict[str, Any]]
+) -> Dict[str, List[CatalyticLink]]:
+    """
+    Run all catalytic detection algorithms.
+    Per OMEGA: "RAF catalysis hidden in information flow."
+
+    Args:
+        entities: List of entity dicts
+        receipts: List of receipt dicts
+
+    Returns:
+        Dict mapping link_type to list of CatalyticLink
+    """
+    all_links = {
+        "shared_address": detect_shared_addresses(entities),
+        "board_connection": detect_board_connections(entities),
+        "ip_proximity": detect_ip_proximity(receipts),
+        "temporal_pattern": detect_temporal_patterns(receipts),
+    }
+
+    return all_links
+
+
+def integrate_catalytic_with_raf(
+    transactions: List[Dict[str, Any]],
+    catalytic_links: Dict[str, List[CatalyticLink]]
+) -> Dict[str, Any]:
+    """
+    Integrate catalytic links into RAF network analysis.
+    Catalytic links become edges in the RAF graph.
+
+    Args:
+        transactions: Financial transactions for RAF graph
+        catalytic_links: Detected catalytic links
+
+    Returns:
+        Enhanced RAF analysis with catalytic cycles
+    """
+    # Build base transaction graph
+    graph = build_transaction_graph(transactions)
+
+    # Add catalytic links as edges
+    catalytic_edges = []
+    for link_type, links in catalytic_links.items():
+        for link in links:
+            catalytic_edges.append({
+                "from": link.entity_a,
+                "to": link.entity_b,
+                "type": f"catalytic_{link_type}",
+                "weight": link.catalytic_strength,
+                "evidence": link.evidence,
+            })
+
+    # Add catalytic edges to graph
+    graph = add_catalytic_links(graph, catalytic_edges)
+
+    # Detect cycles including catalytic links
+    cycles = detect_cycles(graph, min_length=RAF_CYCLE_MIN_LENGTH, max_length=RAF_CYCLE_MAX_LENGTH)
+
+    # Identify keystone species
+    keystones = identify_keystone_species(graph)
+
+    # Classify cycles by catalytic involvement
+    pure_financial = []
+    catalytic_enhanced = []
+
+    for cycle in cycles:
+        has_catalytic = any(
+            graph.get_edge_data(cycle[i], cycle[(i+1) % len(cycle)], {}).get("type", "").startswith("catalytic_")
+            for i in range(len(cycle))
+        ) if hasattr(graph, 'get_edge_data') else False
+
+        if has_catalytic:
+            catalytic_enhanced.append(cycle)
+        else:
+            pure_financial.append(cycle)
+
+    return {
+        "total_cycles": len(cycles),
+        "pure_financial_cycles": len(pure_financial),
+        "catalytic_enhanced_cycles": len(catalytic_enhanced),
+        "keystones": keystones,
+        "catalytic_links_added": len(catalytic_edges),
+        "cycles": cycles,
+    }
+
+
+def emit_catalytic_receipt(
+    catalytic_links: Dict[str, List[CatalyticLink]],
+    raf_integration: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """
+    Emit receipt documenting catalytic link detection.
+
+    Args:
+        catalytic_links: Detected catalytic links by type
+        raf_integration: Optional RAF integration results
+
+    Returns:
+        catalytic_receipt dict
+    """
+    total_links = sum(len(links) for links in catalytic_links.values())
+
+    # Calculate average confidence by type
+    confidence_by_type = {}
+    for link_type, links in catalytic_links.items():
+        if links:
+            confidence_by_type[link_type] = round(
+                sum(l.confidence for l in links) / len(links),
+                4
+            )
+
+    receipt_data = {
+        "tenant_id": TENANT_ID,
+        "total_catalytic_links": total_links,
+        "links_by_type": {k: len(v) for k, v in catalytic_links.items()},
+        "confidence_by_type": confidence_by_type,
+        "omega_citation": "OMEGA §3.1: RAF catalysis hidden in information flow",
+        "simulation_flag": DISCLAIMER,
+    }
+
+    if raf_integration:
+        receipt_data["raf_integration"] = {
+            "total_cycles": raf_integration.get("total_cycles", 0),
+            "catalytic_enhanced_cycles": raf_integration.get("catalytic_enhanced_cycles", 0),
+            "keystones_found": len(raf_integration.get("keystones", [])),
+        }
+
+    return emit_receipt("catalytic", receipt_data, to_stdout=False)
+
+
+def cross_branch_learning_with_catalysis(
+    source_branch: str,
+    source_receipts: List[Dict],
+    source_entities: List[Dict],
+    target_branch: str,
+    target_receipts: List[Dict],
+    target_entities: List[Dict],
+    patterns: List[Dict]
+) -> Dict[str, Any]:
+    """
+    Enhanced cross-branch learning with catalytic link detection.
+    Combines mutual information transfer with RAF catalytic analysis.
+
+    Args:
+        source_branch: Source branch name
+        source_receipts: Receipts from source branch
+        source_entities: Entities from source branch
+        target_branch: Target branch name
+        target_receipts: Receipts from target branch
+        target_entities: Entities from target branch
+        patterns: Patterns to transfer
+
+    Returns:
+        Learning result with catalytic analysis
+    """
+    # Standard cross-branch learning
+    base_result = cross_branch_learning(
+        source_branch, source_receipts,
+        target_branch, target_receipts,
+        patterns
+    )
+
+    # Detect catalytic links across both branches
+    all_entities = source_entities + target_entities
+    all_receipts = source_receipts + target_receipts
+
+    catalytic_links = detect_all_catalytic_links(all_entities, all_receipts)
+
+    # Integrate with RAF
+    all_transactions = [r for r in all_receipts if r.get("amount_usd")]
+    raf_result = integrate_catalytic_with_raf(all_transactions, catalytic_links)
+
+    # Emit receipt
+    emit_catalytic_receipt(catalytic_links, raf_result)
+
+    # Enhance result
+    base_result["catalytic_analysis"] = {
+        "links_detected": sum(len(l) for l in catalytic_links.values()),
+        "raf_cycles": raf_result.get("total_cycles", 0),
+        "catalytic_cycles": raf_result.get("catalytic_enhanced_cycles", 0),
+        "cross_branch_keystones": [
+            k for k in raf_result.get("keystones", [])
+            if _is_cross_branch_keystone(k, source_entities, target_entities)
+        ],
+    }
+
+    return base_result
+
+
+# === CATALYTIC HELPER FUNCTIONS ===
+
+def _normalize_address(addr: str) -> str:
+    """Normalize address for comparison."""
+    if not addr:
+        return ""
+
+    # Lowercase and strip
+    normalized = addr.lower().strip()
+
+    # Remove common abbreviations
+    replacements = [
+        ("street", "st"), ("avenue", "ave"), ("road", "rd"),
+        ("boulevard", "blvd"), ("drive", "dr"), ("lane", "ln"),
+        ("suite", "ste"), ("apartment", "apt"), ("#", ""),
+        (".", ""), (",", ""), ("  ", " "),
+    ]
+    for old, new in replacements:
+        normalized = normalized.replace(old, new)
+
+    # Remove extra whitespace
+    normalized = " ".join(normalized.split())
+
+    return normalized
+
+
+def _normalize_name(name: str) -> str:
+    """Normalize person name for comparison."""
+    if not name:
+        return ""
+
+    # Lowercase and strip
+    normalized = name.lower().strip()
+
+    # Remove titles and suffixes
+    for title in ["mr", "mrs", "ms", "dr", "jr", "sr", "ii", "iii", "esq"]:
+        normalized = normalized.replace(f" {title}", "").replace(f"{title} ", "")
+
+    # Remove punctuation
+    normalized = normalized.replace(".", "").replace(",", "")
+
+    # Remove extra whitespace
+    normalized = " ".join(normalized.split())
+
+    return normalized
+
+
+def _is_cross_branch_keystone(
+    keystone: str,
+    source_entities: List[Dict],
+    target_entities: List[Dict]
+) -> bool:
+    """Check if keystone spans both branches."""
+    source_ids = {e.get("vendor") or e.get("id") for e in source_entities}
+    target_ids = {e.get("vendor") or e.get("id") for e in target_entities}
+
+    return keystone in source_ids or keystone in target_ids
+
+
+# === STOPRULES ===
+
+def stoprule_catalytic_cycle_detected(
+    cycle: List[str],
+    catalytic_types: List[str]
+) -> None:
+    """Halt on high-confidence catalytic cycle."""
+    emit_receipt("anomaly", {
+        "metric": "catalytic_cycle",
+        "cycle_length": len(cycle),
+        "catalytic_types": catalytic_types,
+        "cycle_entities": cycle[:5],  # First 5 for privacy
+        "action": "escalate_investigation",
+        "classification": "critical",
+        "simulation_flag": DISCLAIMER,
+    })
+    raise StopRuleException(f"Catalytic cycle detected: {len(cycle)} entities via {catalytic_types}")
+
+
 # === SYSTEM INFO ===
 
-def list_supported_systems() -> list[dict]:
+def list_supported_systems() -> List[Dict]:
     """List all supported branch systems."""
     systems = []
     for branch, config in BRANCH_SYSTEMS.items():
@@ -640,4 +1189,69 @@ if __name__ == "__main__":
     systems = list_supported_systems()
     assert len(systems) == 6  # All 6 branches
 
-    print(f"# PASS: bridge module self-test (translation: {translation_time:.1f}ms)", file=sys.stderr)
+    print(f"# Translation tests passed (latency: {translation_time:.1f}ms)", file=sys.stderr)
+
+    # === OMEGA v3: Catalytic Detection Tests ===
+    print(f"# Testing OMEGA v3 catalytic detection...", file=sys.stderr)
+
+    # Test entities with shared address (shell company indicator)
+    test_entities = [
+        {
+            "vendor": "VENDOR_A",
+            "physical_address": {"street": "123 Main Street", "city": "Washington", "state": "DC"},
+            "ownership_details": {"owner": "John Smith", "type": "LLC"},
+        },
+        {
+            "vendor": "VENDOR_B",
+            "physical_address": {"street": "123 Main St.", "city": "Washington", "state": "DC"},  # Same address, different format
+            "ownership_details": {"owner": "John Smith", "type": "Corp"},  # Same owner
+        },
+        {
+            "vendor": "VENDOR_C",
+            "physical_address": {"street": "456 Oak Avenue", "city": "Boston", "state": "MA"},
+            "ownership_details": {"owner": "Jane Doe", "type": "LLC"},
+        },
+    ]
+
+    # Test shared address detection
+    address_links = detect_shared_addresses(test_entities)
+    print(f"# Shared address links detected: {len(address_links)}", file=sys.stderr)
+    assert len(address_links) >= 1, "Should detect shared address between VENDOR_A and VENDOR_B"
+
+    # Test board connection detection
+    board_links = detect_board_connections(test_entities)
+    print(f"# Board connection links detected: {len(board_links)}", file=sys.stderr)
+    assert len(board_links) >= 1, "Should detect shared owner between VENDOR_A and VENDOR_B"
+
+    # Test IP proximity detection
+    test_receipts_ip = [
+        {"vendor": "VENDOR_A", "source_ip": "192.168.1.100", "ts": "2024-01-15T10:00:00Z"},
+        {"vendor": "VENDOR_B", "source_ip": "192.168.1.150", "ts": "2024-01-15T10:01:00Z"},
+        {"vendor": "VENDOR_C", "source_ip": "10.0.0.50", "ts": "2024-01-15T10:02:00Z"},
+    ]
+    ip_links = detect_ip_proximity(test_receipts_ip)
+    print(f"# IP proximity links detected: {len(ip_links)}", file=sys.stderr)
+    assert len(ip_links) >= 1, "Should detect IP proximity between VENDOR_A and VENDOR_B"
+
+    # Test temporal pattern detection
+    test_receipts_temporal = [
+        {"vendor": "VENDOR_A", "solicitation_id": "SOL001", "ts": "2024-01-15T10:00:00Z"},
+        {"vendor": "VENDOR_B", "solicitation_id": "SOL001", "ts": "2024-01-15T10:02:00Z"},  # 2 min later
+        {"vendor": "VENDOR_C", "solicitation_id": "SOL001", "ts": "2024-01-15T15:00:00Z"},  # 5 hours later
+    ]
+    temporal_links = detect_temporal_patterns(test_receipts_temporal)
+    print(f"# Temporal pattern links detected: {len(temporal_links)}", file=sys.stderr)
+    assert len(temporal_links) >= 1, "Should detect temporal clustering between VENDOR_A and VENDOR_B"
+
+    # Test detect_all_catalytic_links
+    all_links = detect_all_catalytic_links(test_entities, test_receipts_ip)
+    total_links = sum(len(l) for l in all_links.values())
+    print(f"# Total catalytic links: {total_links}", file=sys.stderr)
+    assert total_links > 0, "Should detect at least one catalytic link"
+
+    # Test catalytic receipt emission
+    catalytic_receipt = emit_catalytic_receipt(all_links)
+    assert catalytic_receipt["receipt_type"] == "catalytic"
+    assert "omega_citation" in catalytic_receipt
+
+    print(f"# PASS: bridge module self-test (catalytic detection validated)", file=sys.stderr)

@@ -23,11 +23,13 @@ from .core import (
     TENANT_ID,
     DISCLAIMER,
     BRANCHES,
+    BEKENSTEIN_BITS_PER_DOLLAR,
     dual_hash,
     emit_receipt,
     merkle,
     stoprule_hash_mismatch,
     stoprule_invalid_receipt,
+    StopRuleException,
 )
 
 # Import v2 holographic functions
@@ -457,6 +459,149 @@ def verify_holographic_integrity(expected_root: str) -> dict:
         "expected_root": expected_root,
         "fraud_detected": False,
     }
+
+
+# === OMEGA v3: BEKENSTEIN BOUND VALIDATION ===
+
+def validate_bekenstein_bound(
+    invoice: dict,
+    metadata: dict = None
+) -> dict:
+    """
+    OMEGA v3: Validate invoice against Bekenstein bound.
+    S <= BEKENSTEIN_BITS_PER_DOLLAR * amount
+
+    The holographic principle: The metadata (digital trail) must be
+    sufficient to holographically encode the work (bulk reality).
+
+    Args:
+        invoice: Invoice dict with amount_usd
+        metadata: Optional metadata dict (extracted from invoice if not provided)
+
+    Returns:
+        Validation result dict
+    """
+    import math
+
+    amount = invoice.get("amount_usd", 0)
+    if amount <= 0:
+        return {
+            "valid": True,
+            "metadata_bits": 0,
+            "invoice_amount": 0,
+            "bekenstein_bound": 0,
+            "bound_violated": False,
+        }
+
+    # Extract or use provided metadata
+    if metadata is None:
+        metadata = _extract_metadata(invoice)
+
+    # Calculate metadata entropy (bits)
+    metadata_bits = _calculate_metadata_bits(metadata)
+
+    # Calculate Bekenstein bound
+    bekenstein_bound = BEKENSTEIN_BITS_PER_DOLLAR * amount
+
+    # Check if bound is violated
+    # Bound violation: metadata too sparse for invoice amount
+    bound_violated = metadata_bits < bekenstein_bound
+
+    return {
+        "valid": not bound_violated,
+        "metadata_bits": round(metadata_bits, 4),
+        "invoice_amount": amount,
+        "bekenstein_bound": round(bekenstein_bound, 4),
+        "bound_violated": bound_violated,
+        "ratio": round(metadata_bits / bekenstein_bound, 4) if bekenstein_bound > 0 else float('inf'),
+    }
+
+
+def _extract_metadata(invoice: dict) -> dict:
+    """Extract metadata fields from invoice."""
+    metadata_fields = [
+        "description", "vendor", "approver", "program", "branch",
+        "itemized_receipt", "proof_of_delivery", "commit_logs",
+        "jira_tickets", "server_logs", "email_threads",
+    ]
+    metadata = {}
+    for field in metadata_fields:
+        if field in invoice and invoice[field]:
+            metadata[field] = invoice[field]
+    return metadata
+
+
+def _calculate_metadata_bits(metadata: dict) -> float:
+    """
+    Calculate entropy (bits) of metadata.
+    Uses compression-based estimation.
+    """
+    import json
+    import zlib
+
+    if not metadata:
+        return 0.0
+
+    # Serialize metadata
+    data = json.dumps(metadata, sort_keys=True).encode('utf-8')
+
+    if len(data) == 0:
+        return 0.0
+
+    # Entropy estimation via compression
+    # Compressed size approximates information content
+    compressed = zlib.compress(data, level=9)
+
+    # Bits = compressed_bytes * 8
+    return len(compressed) * 8
+
+
+def emit_bekenstein_receipt(
+    invoice: dict,
+    validation_result: dict = None
+) -> dict:
+    """
+    Emit bekenstein_receipt documenting bound validation.
+
+    Args:
+        invoice: Invoice that was validated
+        validation_result: Pre-computed validation result
+
+    Returns:
+        bekenstein_receipt dict
+    """
+    if validation_result is None:
+        validation_result = validate_bekenstein_bound(invoice)
+
+    return emit_receipt("bekenstein", {
+        "tenant_id": TENANT_ID,
+        "invoice_id": invoice.get("invoice_number") or invoice.get("transaction_id") or "unknown",
+        "metadata_bits": validation_result.get("metadata_bits", 0),
+        "invoice_amount": validation_result.get("invoice_amount", 0),
+        "bekenstein_bound": validation_result.get("bekenstein_bound", 0),
+        "bound_violated": validation_result.get("bound_violated", False),
+        "ratio": validation_result.get("ratio", 0),
+        "valid": validation_result.get("valid", True),
+        "bits_per_dollar": BEKENSTEIN_BITS_PER_DOLLAR,
+        "simulation_flag": DISCLAIMER,
+    }, to_stdout=False)
+
+
+def stoprule_bekenstein_violated(invoice_id: str, metadata_bits: float, required_bits: float) -> None:
+    """Reject invoice if Bekenstein bound violated."""
+    emit_receipt("anomaly", {
+        "metric": "bekenstein_violated",
+        "invoice_id": invoice_id,
+        "metadata_bits": metadata_bits,
+        "required_bits": required_bits,
+        "delta": metadata_bits - required_bits,
+        "action": "reject_transaction",
+        "classification": "violation",
+        "simulation_flag": DISCLAIMER,
+    })
+    raise StopRuleException(
+        f"Bekenstein bound violated for {invoice_id}: {metadata_bits:.2f} bits < {required_bits:.2f} required"
+    )
 
 
 # === BRANCH ISOLATION ===

@@ -1,9 +1,21 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "WarrantProof Ledger Schema",
-  "description": "Schema for WarrantProof receipt ledger - SIMULATION ONLY",
-  "version": "1.0.0",
+  "description": "Schema for WarrantProof receipt ledger - SIMULATION ONLY - OMEGA v3",
+  "version": "3.0.0",
   "disclaimer": "THIS IS A SIMULATION. NOT REAL DoD DATA. FOR RESEARCH ONLY.",
+
+  "omega_version": "3.0.0",
+  "omega_features": [
+    "Kolmogorov complexity (replaces Shannon entropy)",
+    "Recursive ZK-SNARKs (Mina-style IVC)",
+    "RAF network cycle detection",
+    "Data Availability Sampling",
+    "Adversarial robustness (PGD)",
+    "USASpending ETL integration",
+    "Layout entropy analysis",
+    "SAM.gov CA validation"
+  ],
 
   "hash_strategy": {
     "algorithm": ["SHA256", "BLAKE3"],
@@ -107,6 +119,91 @@
       "required_fields": ["verified", "receipt_count"],
       "optional_fields": ["errors", "merkle_root"],
       "citation_required": false
+    },
+
+    "kolmogorov": {
+      "description": "OMEGA v3: Kolmogorov complexity analysis receipt",
+      "required_fields": ["kolmogorov_ratio", "is_fraud", "compression_algorithm"],
+      "optional_fields": ["original_size", "compressed_size", "threshold"],
+      "citation_required": true,
+      "omega_module": "kolmogorov.py"
+    },
+    "zkp": {
+      "description": "OMEGA v3: Zero-knowledge proof verification receipt",
+      "required_fields": ["proof_valid", "proof_size_bytes", "circuit_type"],
+      "optional_fields": ["public_inputs", "recursive_depth", "verification_time_ms"],
+      "citation_required": true,
+      "omega_module": "zkp.py"
+    },
+    "raf": {
+      "description": "OMEGA v3: RAF network cycle detection receipt",
+      "required_fields": ["cycles_detected", "keystone_species"],
+      "optional_fields": ["cycle_lengths", "catalytic_links", "disruption_impact"],
+      "citation_required": true,
+      "omega_module": "raf.py"
+    },
+    "das": {
+      "description": "OMEGA v3: Data availability sampling receipt",
+      "required_fields": ["available", "confidence", "samples_checked"],
+      "optional_fields": ["sample_rate", "erasure_detected", "chunk_count"],
+      "citation_required": true,
+      "omega_module": "das.py"
+    },
+    "adversarial": {
+      "description": "OMEGA v3: Adversarial robustness test receipt",
+      "required_fields": ["attack_type", "epsilon", "robust"],
+      "optional_fields": ["perturbation_norm", "success_rate", "iterations"],
+      "citation_required": true,
+      "omega_module": "adversarial.py"
+    },
+    "usaspending": {
+      "description": "OMEGA v3: USASpending ETL receipt",
+      "required_fields": ["records_fetched", "endpoint", "fiscal_year"],
+      "optional_fields": ["missing_fields", "pagination_offset", "api_version"],
+      "citation_required": true,
+      "omega_module": "usaspending_etl.py"
+    },
+    "layout_entropy": {
+      "description": "OMEGA v3: PDF layout entropy analysis receipt",
+      "required_fields": ["layout_entropy", "is_suspicious", "analysis_type"],
+      "optional_fields": ["scan_artifacts", "perfect_alignment", "font_consistency"],
+      "citation_required": true,
+      "omega_module": "layout_entropy.py"
+    },
+    "sam_validation": {
+      "description": "OMEGA v3: SAM.gov entity validation receipt",
+      "required_fields": ["entity_valid", "signature_verified", "ca_trust_score"],
+      "optional_fields": ["na_fields_found", "expired", "excluded"],
+      "citation_required": true,
+      "omega_module": "sam_validator.py"
+    },
+    "catalytic": {
+      "description": "OMEGA v3: Catalytic link detection receipt",
+      "required_fields": ["total_catalytic_links", "links_by_type"],
+      "optional_fields": ["confidence_by_type", "raf_integration"],
+      "citation_required": true,
+      "omega_module": "bridge.py"
+    },
+    "holographic_da": {
+      "description": "OMEGA v3: Holographic detection with data availability",
+      "required_fields": ["merkle_root", "fraud_detected", "data_availability"],
+      "optional_fields": ["erasure_encoding", "detection_method"],
+      "citation_required": true,
+      "omega_module": "holographic.py"
+    },
+    "thompson_audit": {
+      "description": "OMEGA v3: Thompson sampling audit selection receipt",
+      "required_fields": ["selected_count", "total_contractors", "budget"],
+      "optional_fields": ["actual_rate", "selected_sample", "exploration_exploitation_ratio"],
+      "citation_required": true,
+      "omega_module": "thompson.py"
+    },
+    "bekenstein": {
+      "description": "OMEGA v3: Bekenstein bound validation receipt",
+      "required_fields": ["amount_usd", "max_bits", "actual_bits", "bound_respected"],
+      "optional_fields": ["violation_ratio", "data_size_bytes"],
+      "citation_required": true,
+      "omega_module": "ledger.py"
     }
   },
 
@@ -178,7 +275,16 @@
     "cost_cascade",
     "cert_fraud",
     "inventory_ghost",
-    "compression_failure"
+    "compression_failure",
+    "kolmogorov_anomaly",
+    "zkp_verification_failed",
+    "raf_cycle_detected",
+    "data_unavailable",
+    "adversarial_attack",
+    "layout_entropy_anomaly",
+    "sam_validation_failed",
+    "catalytic_cycle",
+    "bekenstein_violation"
   ],
 
   "storage": {
@@ -198,5 +304,42 @@
     "detection_recall_min": 0.90,
     "false_positive_max": 0.05,
     "lineage_completeness_min": 0.95
+  },
+
+  "omega_slo_thresholds": {
+    "kolmogorov_threshold": 0.65,
+    "kolmogorov_legitimate_min": 0.75,
+    "bekenstein_bits_per_dollar": 1e-6,
+    "raf_cycle_min_length": 3,
+    "raf_cycle_max_length": 5,
+    "thompson_audit_budget": 0.05,
+    "adversarial_epsilon": 0.01,
+    "zkp_proof_size_bytes": 22000,
+    "data_availability_sample_rate": 0.10,
+    "layout_entropy_threshold": 1.0,
+    "sam_ca_trust_threshold": 0.50,
+    "zkp_verification_ms_max": 100,
+    "catalytic_detection_f1_min": 0.80
+  },
+
+  "omega_constants": {
+    "description": "OMEGA v3 physics-derived constants",
+    "kolmogorov_threshold": {
+      "value": 0.65,
+      "derivation": "K(x) < 0.65 indicates templated/generated data"
+    },
+    "bekenstein_bits_per_dollar": {
+      "value": 1e-6,
+      "derivation": "S ≤ BEKENSTEIN_BITS_PER_DOLLAR × amount (holographic bound)"
+    },
+    "raf_cycle_bounds": {
+      "min": 3,
+      "max": 5,
+      "derivation": "Corruption networks typically 3-5 entity cycles"
+    },
+    "zkp_proof_size": {
+      "value": 22000,
+      "derivation": "Mina-style constant 22KB IVC proof"
+    }
   }
 }

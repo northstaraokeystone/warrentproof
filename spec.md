@@ -1,4 +1,4 @@
-# WarrantProof Specification v2.0
+# WarrantProof Specification v3.0 — Project OMEGA
 
 ## ⚠️ SIMULATION ONLY - NOT REAL DoD DATA - FOR RESEARCH ONLY ⚠️
 
@@ -15,6 +15,34 @@ and operations, based solely on publicly available data.
 
 **v1 Core Paradigm:** Fraud creates entropy. Compression detects disorder.
 Every decision becomes a cryptographic warrant. Receipt chains prove accountability lineage.
+
+---
+
+## v3 OMEGA PARADIGM: Deterministic Zero-Knowledge Proof Architecture
+
+v3 (Project OMEGA) transforms WarrantProof from probabilistic detection to
+cryptographic certainty. Key innovations:
+
+| Component | v2 (Probabilistic) | v3 OMEGA (Deterministic) |
+|-----------|-------------------|--------------------------|
+| Complexity | Shannon entropy | Kolmogorov complexity |
+| Proofs | Statistical confidence | ZK-SNARKs (Mina IVC) |
+| Networks | Ad-hoc graph analysis | RAF autocatalytic cycles |
+| Data integrity | Merkle verification | Data Availability Sampling |
+| Robustness | Single-pass detection | Adversarial training (PGD) |
+| External data | Manual integration | USASpending ETL + SAM.gov CA |
+| Documents | Text-only analysis | Layout entropy (PDF structure) |
+
+### OMEGA Physics Constants
+
+```python
+KOLMOGOROV_THRESHOLD = 0.65        # K(x) < 0.65 → templated/generated
+BEKENSTEIN_BITS_PER_DOLLAR = 1e-6  # S ≤ B × amount (holographic bound)
+RAF_CYCLE_MIN_LENGTH = 3           # Minimum corruption cycle
+RAF_CYCLE_MAX_LENGTH = 5           # Maximum corruption cycle
+ZKP_PROOF_SIZE_BYTES = 22000       # Mina-style 22KB IVC proof
+DATA_AVAILABILITY_SAMPLE_RATE = 0.10  # 10% sampling for 99% confidence
+```
 
 ---
 
@@ -112,6 +140,35 @@ in real-time.
 
 ---
 
+## v3 OMEGA Module Architecture
+
+### New Modules (OMEGA v3)
+
+| Module | Purpose | Key Functions |
+|--------|---------|---------------|
+| kolmogorov.py | Algorithmic complexity via compression | `calculate_kolmogorov()`, `is_kolmogorov_fraud()`, `detect_generator_pattern()` |
+| zkp.py | Recursive ZK-SNARKs (Mina IVC) | `generate_proof()`, `verify_proof()`, `recursive_compose()`, `verify_recursive_chain()` |
+| raf.py | RAF network cycle detection | `build_transaction_graph()`, `detect_cycles()`, `identify_keystone_species()` |
+| das.py | Data Availability Sampling | `encode_with_erasure()`, `sample_chunks()`, `verify_availability()`, `light_client_audit()` |
+| adversarial.py | PGD attack generator | `pgd_attack()`, `fgsm_attack()`, `generate_adversarial_dataset()`, `evaluate_robustness()` |
+| usaspending_etl.py | USASpending.gov ETL | `fetch_awards()`, `fetch_transactions()`, `handle_pagination()`, `detect_missing_fields()` |
+| layout_entropy.py | PDF visual structure analysis | `extract_layout_features()`, `calculate_layout_entropy()`, `detect_scan_artifacts()` |
+| sam_validator.py | SAM.gov CA validation | `fetch_entity()`, `validate_signature()`, `reject_na_fields()`, `validate_entity()` |
+
+### Modified Modules (OMEGA v3 enhancements)
+
+| Module | OMEGA Additions |
+|--------|-----------------|
+| core.py | OMEGA constants (KOLMOGOROV_THRESHOLD, BEKENSTEIN_BITS_PER_DOLLAR, etc.) |
+| compress.py | `compress_receipt_kolmogorov()` - Kolmogorov complexity integration |
+| thompson.py | `thompson_audit_selection()` - Multi-armed bandit for audit allocation |
+| ledger.py | `validate_bekenstein_bound()` - Holographic information bound |
+| detect.py | `zkp_verification_gate()` - ZKP proof as fraud verification |
+| bridge.py | `detect_all_catalytic_links()` - Non-financial relationship detection |
+| holographic.py | `holographic_detect_with_da()` - Data availability sampling |
+
+---
+
 ## Outputs
 
 ### Receipts
@@ -142,6 +199,23 @@ Every operation emits a receipt. Receipt types:
 | holographic | holographic.py | Per boundary check | syndrome, fraud_detected, bits_used |
 | meta_receipt | meta_receipt.py | Per closure test | closure_test, self_reference_valid |
 | mutual_info | bridge.py | Per transfer | source_branch, target_branch, MI_score |
+
+### v3 OMEGA Receipt Types
+
+| Type | Module | Frequency | Key Fields |
+|------|--------|-----------|------------|
+| kolmogorov | kolmogorov.py | Per analysis | kolmogorov_ratio, is_fraud, compression_algorithm |
+| zkp | zkp.py | Per proof | proof_valid, proof_size_bytes, circuit_type |
+| raf | raf.py | Per network scan | cycles_detected, keystone_species, cycle_lengths |
+| das | das.py | Per audit | available, confidence, samples_checked |
+| adversarial | adversarial.py | Per attack test | attack_type, epsilon, robust |
+| usaspending | usaspending_etl.py | Per ETL batch | records_fetched, endpoint, fiscal_year |
+| layout_entropy | layout_entropy.py | Per document | layout_entropy, is_suspicious, scan_artifacts |
+| sam_validation | sam_validator.py | Per entity | entity_valid, signature_verified, ca_trust_score |
+| catalytic | bridge.py | Per detection | total_catalytic_links, links_by_type |
+| holographic_da | holographic.py | Per DA check | merkle_root, data_availability, erasure_encoding |
+| thompson_audit | thompson.py | Per selection | selected_count, budget, exploration_exploitation_ratio |
+| bekenstein | ledger.py | Per bound check | amount_usd, max_bits, bound_respected |
 
 ### Simulation Results
 - `SimState`: Final simulation state
@@ -192,6 +266,23 @@ Every operation emits a receipt. Receipt types:
 | Mutual info threshold | ≥ 0.30 | Transfer criterion | bridge.py |
 | Cross-branch accuracy | ≥ 85% | Transfer fidelity | bridge.py |
 | Tree depth | O(log N) | Hierarchical bound | entropy_tree.py |
+
+### v3 OMEGA SLOs
+
+| SLO | Threshold | Physics Basis | Module |
+|-----|-----------|---------------|--------|
+| Kolmogorov threshold | K(x) < 0.65 → fraud | Algorithmic complexity | kolmogorov.py |
+| Kolmogorov legitimate | K(x) ≥ 0.75 | Natural data complexity | kolmogorov.py |
+| ZKP proof size | ≤ 22KB | Mina IVC constant | zkp.py |
+| ZKP verification time | ≤ 100ms | O(1) verification | zkp.py |
+| RAF cycle length | 3-5 entities | Corruption topology | raf.py |
+| Data availability | > 99% confidence | Erasure coding bound | das.py |
+| Adversarial epsilon | 0.01 L∞ | PGD robustness | adversarial.py |
+| Layout entropy | < 1.0 → suspicious | Visual structure | layout_entropy.py |
+| SAM.gov trust | ≥ 0.50 | CA validation | sam_validator.py |
+| Bekenstein bound | S ≤ 1e-6 × $ | Holographic principle | ledger.py |
+| Catalytic F1 | ≥ 0.80 | Detection accuracy | bridge.py |
+| Thompson audit budget | 5% of contractors | Multi-armed bandit | thompson.py |
 
 ---
 
@@ -271,6 +362,53 @@ and halt execution on critical failures.
 - **Trigger:** Coherence < PATTERN_COHERENCE_MIN (0.80)
 - **Action:** Emit anomaly receipt, wait for more receipts
 - **Classification:** deviation
+
+### v3 OMEGA Stoprules
+
+#### stoprule_kolmogorov_anomaly
+- **Trigger:** K(x) < KOLMOGOROV_THRESHOLD (0.65)
+- **Action:** Emit kolmogorov anomaly receipt, flag for ZKP verification
+- **Classification:** alert
+
+#### stoprule_zkp_verification_failed
+- **Trigger:** ZKP proof verification returns False
+- **Action:** Emit anomaly receipt, reject transaction
+- **Classification:** violation
+
+#### stoprule_raf_cycle_detected
+- **Trigger:** RAF cycle of length 3-5 detected
+- **Action:** Emit raf_cycle receipt, escalate to investigation
+- **Classification:** critical
+
+#### stoprule_data_unavailable
+- **Trigger:** DA confidence < 99%
+- **Action:** Emit anomaly receipt, investigate withholding
+- **Classification:** critical
+
+#### stoprule_adversarial_attack
+- **Trigger:** Adversarial perturbation detected
+- **Action:** Emit adversarial receipt, harden model
+- **Classification:** alert
+
+#### stoprule_layout_entropy_anomaly
+- **Trigger:** Layout entropy < LAYOUT_ENTROPY_THRESHOLD (1.0)
+- **Action:** Emit layout_entropy receipt, flag document
+- **Classification:** alert
+
+#### stoprule_sam_validation_failed
+- **Trigger:** Entity validation fails (N/A fields, expired, excluded)
+- **Action:** Emit sam_validation receipt, reject entity
+- **Classification:** violation
+
+#### stoprule_bekenstein_violated
+- **Trigger:** Data entropy exceeds Bekenstein bound for amount
+- **Action:** Emit bekenstein receipt, flag transaction
+- **Classification:** violation
+
+#### stoprule_catalytic_cycle_detected
+- **Trigger:** Catalytic links form cycle (shared address + board + temporal)
+- **Action:** Emit catalytic receipt, escalate investigation
+- **Classification:** critical
 
 ---
 
@@ -437,6 +575,49 @@ Ledger          ──►     holographic_detect()    Fraud detected from
 |---------|------|---------|
 | 1.0.0 | 2024-01-01 | Initial specification |
 | 2.0.0 | 2024-12-23 | v2 paradigm: thermodynamic autocatalytic pattern emergence, Thompson sampling, holographic detection |
+| 3.0.0 | 2024-12-23 | v3 OMEGA: deterministic ZKP architecture, Kolmogorov complexity, RAF networks, data availability |
+
+### v3.0.0 OMEGA Changelog
+
+**New Modules (8):**
+- kolmogorov.py: Algorithmic complexity via compression (replaces Shannon entropy)
+- zkp.py: Recursive ZK-SNARKs (Mina-style IVC, 22KB constant proofs)
+- raf.py: RAF autocatalytic network cycle detection (keystone species)
+- das.py: Data Availability Sampling via erasure coding
+- adversarial.py: PGD attack generator for adversarial robustness
+- usaspending_etl.py: USASpending.gov API ETL pipeline
+- layout_entropy.py: PDF visual structure analysis (scan artifacts, alignment)
+- sam_validator.py: SAM.gov entity validation as Certificate Authority
+
+**Enhanced Modules (7):**
+- core.py: OMEGA constants (KOLMOGOROV_THRESHOLD, BEKENSTEIN_BITS_PER_DOLLAR, etc.)
+- compress.py: Kolmogorov complexity integration
+- thompson.py: Multi-armed bandit audit selection (70/30 exploit/explore)
+- ledger.py: Bekenstein bound validation
+- detect.py: ZKP verification gate
+- bridge.py: Catalytic link detection (shared addresses, board connections, IP proximity)
+- holographic.py: Data availability sampling integration
+
+**New Receipt Types (12):**
+- kolmogorov, zkp, raf, das, adversarial, usaspending
+- layout_entropy, sam_validation, catalytic, holographic_da
+- thompson_audit, bekenstein
+
+**Key OMEGA Insight:**
+The v3 paradigm transforms probabilistic detection into cryptographic certainty.
+Instead of "compression ratio suggests fraud with 95% confidence", OMEGA provides:
+- Deterministic: K(x) < 0.65 → provably templated
+- Verifiable: ZKP proof validates fraud claim
+- Network-aware: RAF cycles identify corruption topology
+- Data-available: Erasure coding prevents hiding evidence
+
+**Physics Derivation:**
+```
+KOLMOGOROV_THRESHOLD = 0.65      # From Grok Q2 empirical analysis
+BEKENSTEIN_BITS_PER_DOLLAR = 1e-6  # Holographic information bound
+RAF_CYCLE_BOUNDS = [3, 5]        # Corruption network topology
+ZKP_PROOF_SIZE = 22KB            # Mina constant-size IVC
+```
 
 ### v2.0.0 Changelog
 

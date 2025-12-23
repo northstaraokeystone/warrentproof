@@ -41,9 +41,19 @@ from .core import (
     TENANT_ID,
     DISCLAIMER,
     CASCADE_WINDOW_SIZE,
+    KOLMOGOROV_THRESHOLD,
+    KOLMOGOROV_LEGITIMATE_MIN,
     dual_hash,
     emit_receipt,
     get_citation,
+)
+
+# Import Kolmogorov module for OMEGA integration
+from .kolmogorov import (
+    calculate_kolmogorov,
+    kolmogorov_compress,
+    compress_transaction_history,
+    detect_generator_pattern,
 )
 
 
@@ -465,24 +475,39 @@ def compress_receipt_with_entropy(receipt: dict) -> tuple:
     Enhanced compression that returns ratio, entropy, and field ratios.
     Used for entropy_tree indexing and field fingerprinting.
 
+    OMEGA v3: Now uses Kolmogorov complexity as primary metric.
+
     Args:
         receipt: Single receipt to analyze
 
     Returns:
-        (compression_ratio, entropy_score, field_ratios)
+        (K_complexity, entropy_score, field_ratios)
     """
-    # Calculate overall compression
-    data = json.dumps(receipt, sort_keys=True).encode('utf-8')
-    compressed = gzip.compress(data, compresslevel=9)
-    ratio = len(compressed) / len(data) if len(data) > 0 else 1.0
+    # OMEGA v3: Use Kolmogorov complexity as primary metric
+    K_complexity, _, field_ratios = kolmogorov_compress(receipt)
 
-    # Calculate entropy
+    # Calculate Shannon entropy (secondary metric for backward compatibility)
     entropy = entropy_score([receipt])
 
-    # Calculate field-wise compression
-    field_ratios = field_wise_compression(receipt)
+    return (K_complexity, round(entropy, 4), field_ratios)
 
-    return (round(ratio, 4), round(entropy, 4), field_ratios)
+
+def compress_receipt_kolmogorov(receipt: dict) -> tuple:
+    """
+    OMEGA v3: Kolmogorov complexity as PRIMARY metric.
+    Returns (K_complexity, ratio, field_ratios).
+
+    This replaces Shannon entropy as the core fraud signal.
+    - K < 0.65 = scripted fraud (too compressible)
+    - K > 0.75 = legitimate (algorithmically irreducible)
+
+    Args:
+        receipt: Single receipt to analyze
+
+    Returns:
+        (K_complexity, compression_ratio, field_ratios)
+    """
+    return kolmogorov_compress(receipt)
 
 
 # === ANOMALY DETECTION VIA COMPRESSION ===
