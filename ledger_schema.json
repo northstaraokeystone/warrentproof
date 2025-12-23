@@ -17,6 +17,14 @@
     "SAM.gov CA validation"
   ],
 
+  "v4_features": [
+    "Plain-language explanations for non-technical users",
+    "Self-improving detection via entropy fitness tracking",
+    "Evidence quality gates and abstention logic",
+    "Evidence freshness tracking and refresh priorities",
+    "Cross-domain pattern learning and transfer"
+  ],
+
   "hash_strategy": {
     "algorithm": ["SHA256", "BLAKE3"],
     "format": "sha256hex:blake3hex",
@@ -204,6 +212,119 @@
       "optional_fields": ["violation_ratio", "data_size_bytes"],
       "citation_required": true,
       "omega_module": "ledger.py"
+    },
+
+    "insight": {
+      "description": "v4.0: Plain-language explanation for non-technical users",
+      "required_fields": ["analysis_type", "summary"],
+      "optional_fields": ["title", "what_it_means", "why_it_matters", "suggested_action", "confidence_level"],
+      "citation_required": false,
+      "omega_module": "insight.py"
+    },
+    "fitness": {
+      "description": "v4.0: Pattern fitness tracking for self-improvement",
+      "required_fields": ["pattern_id", "fitness_score"],
+      "optional_fields": ["entropy_before", "entropy_after", "is_helpful", "pattern_rating"],
+      "citation_required": true,
+      "omega_module": "fitness.py"
+    },
+    "health": {
+      "description": "v4.0: System learning health report",
+      "required_fields": ["status", "overall_fitness"],
+      "optional_fields": ["pattern_breakdown", "top_patterns", "weak_patterns"],
+      "citation_required": false,
+      "omega_module": "fitness.py"
+    },
+    "quality": {
+      "description": "v4.0: Evidence quality assessment",
+      "required_fields": ["determination_id", "quality_level", "confidence_score"],
+      "optional_fields": ["should_abstain", "abstention_reason", "evidence_summary"],
+      "citation_required": false,
+      "omega_module": "guardian.py"
+    },
+    "abstain": {
+      "description": "v4.0: Abstention when evidence is insufficient",
+      "required_fields": ["determination_id", "because"],
+      "optional_fields": ["reason_code", "reason_description", "user_message", "evidence_summary"],
+      "citation_required": false,
+      "omega_module": "guardian.py"
+    },
+    "counter_evidence": {
+      "description": "v4.0: Counter-evidence found against a finding",
+      "required_fields": ["finding_type", "counter_evidence_found"],
+      "optional_fields": ["counter_evidence_items", "total_counter_weight", "has_significant_counter"],
+      "citation_required": false,
+      "omega_module": "guardian.py"
+    },
+    "integrity": {
+      "description": "v4.0: Evidence chain integrity verification",
+      "required_fields": ["receipts_checked", "has_integrity"],
+      "optional_fields": ["issues_found", "issues", "integrity_score"],
+      "citation_required": false,
+      "omega_module": "guardian.py"
+    },
+    "gate": {
+      "description": "v4.0: Quality gate pass/fail for decisions",
+      "required_fields": ["determination_id", "decision", "all_passed"],
+      "optional_fields": ["gates_passed", "gates_failed", "user_message"],
+      "citation_required": false,
+      "omega_module": "guardian.py"
+    },
+    "freshness": {
+      "description": "v4.0: Evidence freshness assessment",
+      "required_fields": ["freshness_level", "confidence_factor"],
+      "optional_fields": ["age_days", "refresh_recommended", "days_until_degraded"],
+      "citation_required": false,
+      "omega_module": "freshness.py"
+    },
+    "refresh_priority": {
+      "description": "v4.0: Prioritized list of evidence needing refresh",
+      "required_fields": ["items_needing_refresh", "priorities"],
+      "optional_fields": ["top_priority", "recommendation"],
+      "citation_required": false,
+      "omega_module": "freshness.py"
+    },
+    "monitoring": {
+      "description": "v4.0: Freshness monitoring for tracked items",
+      "required_fields": ["items_monitored", "alerts_triggered"],
+      "optional_fields": ["healthy_items", "alerts", "upcoming_alerts"],
+      "citation_required": false,
+      "omega_module": "freshness.py"
+    },
+    "pattern_match": {
+      "description": "v4.0: Known fraud pattern matching result",
+      "required_fields": ["patterns_checked", "matches_found"],
+      "optional_fields": ["matches", "risk_level", "highest_confidence", "summary"],
+      "citation_required": false,
+      "omega_module": "learner.py"
+    },
+    "transfer": {
+      "description": "v4.0: Pattern transfer between domains",
+      "required_fields": ["pattern_id", "source_domain", "target_domain"],
+      "optional_fields": ["transfer_quality", "effective_transferability", "adaptation_notes"],
+      "citation_required": false,
+      "omega_module": "learner.py"
+    },
+    "learn": {
+      "description": "v4.0: New pattern learned from data",
+      "required_fields": ["success", "pattern_name"],
+      "optional_fields": ["pattern_id", "signature_rules", "initial_confidence"],
+      "citation_required": false,
+      "omega_module": "learner.py"
+    },
+    "library_summary": {
+      "description": "v4.0: Summary of pattern library",
+      "required_fields": ["total_patterns", "patterns"],
+      "optional_fields": ["domains_covered", "average_transferability"],
+      "citation_required": false,
+      "omega_module": "learner.py"
+    },
+    "prune": {
+      "description": "v4.0: Harmful pattern pruning recommendations",
+      "required_fields": ["harmful_patterns_found", "action_needed"],
+      "optional_fields": ["recommendations", "summary"],
+      "citation_required": false,
+      "omega_module": "fitness.py"
     }
   },
 
