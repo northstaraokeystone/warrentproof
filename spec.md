@@ -1,4 +1,4 @@
-# Gov-OS Specification v5.0
+# Gov-OS Specification v5.1
 
 **THIS IS A SIMULATION FOR ACADEMIC RESEARCH PURPOSES ONLY**
 
@@ -9,6 +9,14 @@
 Gov-OS is a universal federal fraud detection operating system that detects procurement fraud by measuring data complexity. Legitimate markets are chaotic (high entropy). Fraud requires coordination, which creates patterns (low entropy). Low entropy data compresses better than legitimate data.
 
 **Core Principle:** Compression ratio reveals fraud.
+
+### v5.1 Temporal Physics
+
+v5.1 adds temporal decay physics for cross-domain contagion detection:
+- **Exponential Decay**: Legitimate relationships decay naturally (Wt = W₀e^(-λt))
+- **Resistance Detection**: Static edges in dynamic environments are fraud signals
+- **Zombie Entities**: Preserved weight with zero activity = physically impossible
+- **Cross-Domain Contagion**: Fraud collapse in one domain flags entities in linked domains
 
 ---
 
@@ -32,6 +40,7 @@ Gov-OS unifies multiple fraud detection subsystems into a single cohesive platfo
 | v3.0 OMEGA | Certainty | Kolmogorov complexity + ZK proofs |
 | v4.0 | Usability | Plain-language explanations + self-improvement |
 | v5.0 | Unification | Single cohesive platform with domain modules |
+| v5.1 | Temporal | Cross-domain contagion via temporal decay physics |
 
 ---
 
@@ -51,12 +60,27 @@ gov-os/
 │   ├── core.py                 # Foundation: hash, receipts, citations
 │   ├── domain.py               # Domain loader and registry
 │   │
+│   ├── core/                   # v5.1 Core module package
+│   │   ├── __init__.py         # Core exports
+│   │   ├── constants.py        # All constants including temporal
+│   │   ├── receipt.py          # Receipt emission functions
+│   │   ├── utils.py            # Utility functions (hash, merkle)
+│   │   ├── temporal.py         # v5.1 Temporal decay physics
+│   │   ├── insight.py          # v5.1 Plain-English explanations
+│   │   ├── harness.py          # Simulation harness
+│   │   ├── raf.py              # RAF re-exports
+│   │   └── volatility.py       # Volatility index
+│   │
+│   ├── scenarios/              # v5.1 Scenario modules
+│   │   ├── __init__.py
+│   │   └── contagion.py        # Cross-domain contagion scenario
+│   │
 │   ├── # Core Detection
 │   ├── compress.py             # Entropy compression analysis
-│   ├── detect.py               # Multi-stage anomaly detection
+│   ├── detect.py               # Multi-stage anomaly detection (+v5.1 resistance)
 │   ├── kolmogorov.py           # Algorithmic complexity
 │   ├── zkp.py                  # Zero-knowledge proofs
-│   ├── raf.py                  # Network cycle detection
+│   ├── raf.py                  # Network cycle detection (+v5.1 super-graph)
 │   ├── holographic.py          # Boundary-only detection
 │   ├── thompson.py             # Bayesian audit sampling
 │   ├── ledger.py               # Merkle ledger + Bekenstein bounds
@@ -194,6 +218,9 @@ gov-os shipyard --simulate              # Run simulation
 | ZKP Proof Size | 22 KB constant | N/A | Mina IVC |
 | Evidence Freshness | > 90 days = stale | < 30 days = fresh | v4.0 |
 | Pattern Confidence | > 0.50 match | N/A | v4.0 learner |
+| Decay Resistance | > 0.10 = anomaly | <= 0.10 | v5.1 temporal |
+| Zombie Days | > 365 days dormant | N/A | v5.1 temporal |
+| Contagion Overlap | >= 5% shared entities | N/A | v5.1 temporal |
 
 ---
 
@@ -221,6 +248,21 @@ gov-os shipyard --simulate              # Run simulation
 | guardian.py | Evidence quality gates |
 | freshness.py | Evidence staleness detection |
 | learner.py | Cross-domain pattern transfer |
+
+### v5.1 Temporal Physics (src/core/)
+
+| Module | Purpose |
+|--------|---------|
+| temporal.py | Exponential decay physics, resistance detection |
+| insight.py | Plain-English fraud explanations |
+| harness.py | Simulation state and scenario execution |
+| constants.py | All physics constants including LAMBDA_NATURAL |
+
+### v5.1 Scenarios (src/scenarios/)
+
+| Module | Purpose |
+|--------|---------|
+| contagion.py | Cross-domain super-graph contagion detection |
 
 ### Domains (src/domains/)
 
@@ -456,6 +498,38 @@ N_critical = log2(1/dH) x (H_legit / dH)
 When N > N_critical, patterns become distinguishable
 ```
 
+### v5.1 Temporal Decay (Exponential)
+```
+Wt = W₀ × e^(-λt)
+
+λ = LAMBDA_NATURAL = 0.005 (per month)
+Half-life ≈ ln(2) / λ ≈ 138 months
+
+Physics: Legitimate relationships decay like radioactive atoms.
+Fraud maintains artificial weight over time.
+```
+
+### v5.1 Resistance to Decay
+```
+Resistance = max(0, (observed_weight / expected_weight) - 1.0)
+
+Resistance > 0.10 -> Anomaly: edge resisting natural decay
+Resistance = 0 -> Normal: edge decayed as expected
+
+Physics: Static edges in dynamic environments are low-entropy,
+high-information anomalies.
+```
+
+### v5.1 Cross-Domain Contagion
+```
+When Medicaid ring collapses:
+  → Shell entity links domains
+  → Temporal rigidity propagates to Defense
+  → Pre-invoice flag on Defense entities
+
+Detection: 2-4x earlier via domain correlation
+```
+
 ---
 
 ## Version History
@@ -468,6 +542,32 @@ When N > N_critical, patterns become distinguishable
 | 3.1.0 | 2024-12-23 | Shipyard: Trump-class, 8 receipt types |
 | 4.0.0 | 2024-12-23 | User-friendly: insight, fitness, guardian, freshness, learner |
 | 5.0.0 | 2024-12-23 | Unification: Single cohesive platform with domain modules |
+| 5.1.0 | 2024-12-23 | Temporal: Decay physics, resistance detection, cross-domain contagion |
+
+---
+
+## v5.1 Temporal Physics Constants
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| LAMBDA_NATURAL | 0.005 | Monthly decay rate (half-life ≈ 138 months) |
+| RESISTANCE_THRESHOLD | 0.10 | Flag when resistance exceeds 10% |
+| ZOMBIE_DAYS | 365 | Dormancy threshold for zombie detection |
+| CONTAGION_OVERLAP_MIN | 0.05 | Minimum 5% shared entities for contagion scan |
+| SHELL_PATTERN_THRESHOLD | 2 | Minimum domains to classify entity as shell |
+| ENTROPY_RESISTANCE_MULTIPLIER | 1.22 | +22% sensitivity boost from resistance |
+
+---
+
+## v5.1 Receipt Types (5 new)
+
+| Receipt | Purpose | Key Fields |
+|---------|---------|------------|
+| temporal_anomaly_receipt | Decay resistance detected | resistance, days_since_last, expected_weight |
+| zombie_receipt | Dormant entity with preserved weight | days_dormant, preserved_weight, linked_domains |
+| contagion_receipt | Cross-domain fraud propagation | source_domain, target_domain, shell_entity |
+| super_graph_receipt | Multi-domain graph merge | domains, shared_entities, cycles_detected |
+| insight_receipt | Plain-English explanation | plain_english, confidence, audit_ready |
 
 ---
 

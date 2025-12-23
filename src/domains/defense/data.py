@@ -202,3 +202,101 @@ def generate_sample_data(n_contracts: int = 10, n_vendors: int = 5) -> DefenseRe
         receipts.contracts.append(contract)
 
     return receipts
+
+
+# ============================================================================
+# v5.1 SAMPLE DATA FOR CONTAGION SCENARIO
+# ============================================================================
+
+def sample_shipyard_receipts(
+    n: int = 100,
+    seed: int = 42,
+    include_ring: bool = True,
+    shell_entity: str = "SHELL_HOLDINGS_LLC",
+) -> List[Dict[str, Any]]:
+    """
+    Generate synthetic defense/shipyard receipts for contagion testing.
+
+    Includes:
+    - Normal legitimate transactions
+    - Defense ring: WELDCO_INC → SUBCO_A → SUBCO_B → WELDCO_INC
+    - Link to shell entity: SUBCO_B → SHELL_HOLDINGS_LLC
+
+    Per spec: "8% shell overlap between Defense/Medicaid empirically validated"
+
+    Args:
+        n: Number of receipts to generate
+        seed: Random seed for reproducibility
+        include_ring: Whether to include fraud ring pattern
+        shell_entity: ID of shell entity linking domains
+
+    Returns:
+        List of receipt dicts suitable for RAF analysis
+    """
+    from datetime import datetime, timedelta
+
+    random.seed(seed)
+    receipts = []
+    base_date = datetime(2024, 1, 1)
+
+    # Normal vendors
+    vendors = [f"SHIPYARD_VENDOR_{i}" for i in range(10)]
+    vendors.extend(["WELDCO_INC", "SUBCO_A", "SUBCO_B"])
+
+    # Generate normal transactions
+    for i in range(n - 10 if include_ring else n):
+        source = random.choice(vendors)
+        target = random.choice([v for v in vendors if v != source])
+        receipts.append({
+            "receipt_type": "defense_ingest_receipt",
+            "source_duns": source,
+            "target_duns": target,
+            "vendor_id": source,
+            "contract_id": f"DFNSE_{i:05d}",
+            "amount_usd": random.random() * 2_000_000,
+            "date": base_date + timedelta(days=random.randint(0, 365)),
+            "domain": "defense",
+            "tenant_id": "gov-os-defense",
+            "simulation_flag": DISCLAIMER,
+        })
+
+    if include_ring:
+        # Ring pattern with old dates (triggers zombie detection)
+        ring_date = base_date - timedelta(days=400)
+        ring_vendors = ["WELDCO_INC", "SUBCO_A", "SUBCO_B"]
+
+        for i in range(len(ring_vendors)):
+            source = ring_vendors[i]
+            target = ring_vendors[(i + 1) % len(ring_vendors)]
+            receipts.append({
+                "receipt_type": "defense_raf_receipt",
+                "source_duns": source,
+                "target_duns": target,
+                "vendor_id": source,
+                "contract_id": f"RING_DFNSE_{i}",
+                "amount_usd": 500_000,
+                "date": ring_date,
+                "domain": "defense",
+                "_is_fraud": True,
+                "fraud_type": "subcontractor_ring",
+                "tenant_id": "gov-os-defense",
+                "simulation_flag": DISCLAIMER,
+            })
+
+        # Link to shell entity (cross-domain connector)
+        receipts.append({
+            "receipt_type": "defense_raf_receipt",
+            "source_duns": "SUBCO_B",
+            "target_duns": shell_entity,
+            "vendor_id": "SUBCO_B",
+            "contract_id": "SHELL_LINK_DFNSE",
+            "amount_usd": 250_000,
+            "date": ring_date,
+            "domain": "defense",
+            "_is_fraud": True,
+            "fraud_type": "shell_link",
+            "tenant_id": "gov-os-defense",
+            "simulation_flag": DISCLAIMER,
+        })
+
+    return receipts

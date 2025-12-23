@@ -35,6 +35,8 @@ except ImportError:
     HAS_NETWORKX = False
     nx = None
 
+from datetime import datetime
+
 from .core import (
     TENANT_ID,
     DISCLAIMER,
@@ -44,6 +46,20 @@ from .core import (
     emit_receipt,
     StopRuleException,
 )
+
+# v5.1 Temporal imports
+from .core.temporal import (
+    edge_weight_decay,
+    resistance_to_decay,
+    update_edge_with_decay,
+    detect_zombies,
+    identify_shell_entities,
+    propagate_contagion,
+    calculate_shared_entity_ratio,
+    LAMBDA_NATURAL,
+    RESISTANCE_THRESHOLD,
+)
+from .core.receipt import emit_super_graph_receipt
 
 
 @dataclass
@@ -85,17 +101,34 @@ def build_transaction_graph(transactions: list) -> 'nx.DiGraph':
         if not G.has_node(target):
             G.add_node(target, entity_type=tx.get("target_type", "unknown"))
 
+        # Get transaction date for temporal tracking
+        tx_date = tx.get("date")
+        if isinstance(tx_date, str):
+            try:
+                tx_date = datetime.fromisoformat(tx_date.replace("Z", "+00:00"))
+            except ValueError:
+                tx_date = datetime.utcnow()
+        elif not isinstance(tx_date, datetime):
+            tx_date = datetime.utcnow()
+
         # Add edge with transaction metadata
         if G.has_edge(source, target):
             # Update existing edge
             G[source][target]["weight"] += tx.get("amount_usd", 0)
             G[source][target]["transaction_count"] += 1
+            # Update last_seen_date if this transaction is more recent
+            existing_date = G[source][target].get("last_seen_date")
+            if existing_date is None or tx_date > existing_date:
+                G[source][target]["last_seen_date"] = tx_date
         else:
             G.add_edge(
                 source, target,
                 weight=tx.get("amount_usd", 0),
+                initial_weight=tx.get("amount_usd", 0),
                 transaction_count=1,
-                edge_type="financial"
+                edge_type="financial",
+                last_seen_date=tx_date,
+                domain=tx.get("domain", "unknown"),
             )
 
     return G
@@ -408,6 +441,176 @@ def emit_raf_receipt(
         "max_cycle_length": RAF_CYCLE_MAX_LENGTH,
         "simulation_flag": DISCLAIMER,
     }, to_stdout=False)
+
+
+# ============================================================================
+# v5.1 TEMPORAL INTEGRATION
+# ============================================================================
+
+def add_transaction(
+    graph: 'nx.DiGraph',
+    source: str,
+    target: str,
+    amount: float,
+    tx_date: datetime = None,
+    domain: str = "unknown",
+    apply_decay: bool = True,
+) -> float:
+    """
+    Add a transaction to the graph with temporal decay.
+
+    v5.1: Calls update_edge_with_decay() to apply natural decay
+    and detect resistance anomalies.
+
+    Args:
+        graph: NetworkX DiGraph to update
+        source: Source entity ID
+        target: Target entity ID
+        amount: Transaction amount
+        tx_date: Transaction date (default: now)
+        domain: Domain identifier
+        apply_decay: Whether to apply decay (default: True)
+
+    Returns:
+        Resistance value if decay applied, else 0.0
+    """
+    if not HAS_NETWORKX:
+        raise ImportError("NetworkX required for RAF analysis")
+
+    if tx_date is None:
+        tx_date = datetime.utcnow()
+
+    resistance = 0.0
+
+    # If edge exists and decay is enabled, calculate resistance
+    if graph.has_edge(source, target) and apply_decay:
+        last_seen = graph[source][target].get("last_seen_date")
+        if last_seen:
+            resistance = update_edge_with_decay(
+                graph, source, target, tx_date, last_seen, domain
+            )
+
+    # Add/update the edge
+    if graph.has_edge(source, target):
+        graph[source][target]["weight"] += amount
+        graph[source][target]["transaction_count"] += 1
+        graph[source][target]["last_seen_date"] = tx_date
+    else:
+        # Add nodes if needed
+        if not graph.has_node(source):
+            graph.add_node(source, entity_type="unknown", domain=domain)
+        if not graph.has_node(target):
+            graph.add_node(target, entity_type="unknown", domain=domain)
+
+        graph.add_edge(
+            source, target,
+            weight=amount,
+            initial_weight=amount,
+            transaction_count=1,
+            edge_type="financial",
+            last_seen_date=tx_date,
+            domain=domain,
+            resistance=0.0,
+        )
+
+    return resistance
+
+
+def build_super_graph(
+    domain_graphs: dict,
+) -> 'nx.DiGraph':
+    """
+    Merge multiple domain graphs into a super-graph for cross-domain analysis.
+
+    v5.1: Enables cross-domain contagion detection by:
+    - Merging all edges from domain graphs
+    - Tagging edges with origin domain
+    - Identifying shared entities (nodes in multiple domains)
+    - Detecting RAF cycles across domain boundaries
+
+    Args:
+        domain_graphs: Dict of {domain_name: nx.DiGraph}
+
+    Returns:
+        Merged super-graph with cross-domain edges
+
+    Emits:
+        super_graph_receipt with merge statistics
+    """
+    if not HAS_NETWORKX:
+        raise ImportError("NetworkX required for super-graph building")
+
+    if not domain_graphs:
+        return nx.DiGraph()
+
+    G = nx.DiGraph()
+    domain_nodes = {}  # Track nodes per domain
+
+    # Merge all domain graphs
+    for domain_name, domain_graph in domain_graphs.items():
+        domain_nodes[domain_name] = set(domain_graph.nodes())
+
+        # Copy nodes with domain metadata
+        for node, data in domain_graph.nodes(data=True):
+            if G.has_node(node):
+                # Node exists - track all domains
+                existing_domains = G.nodes[node].get("domains", [])
+                if isinstance(existing_domains, str):
+                    existing_domains = [existing_domains]
+                if domain_name not in existing_domains:
+                    existing_domains.append(domain_name)
+                G.nodes[node]["domains"] = existing_domains
+            else:
+                G.add_node(node, **data, domain=domain_name, domains=[domain_name])
+
+        # Copy edges with domain metadata
+        for u, v, data in domain_graph.edges(data=True):
+            if G.has_edge(u, v):
+                # Edge exists - merge domains
+                existing = G[u][v].get("domains", [G[u][v].get("domain", "unknown")])
+                if isinstance(existing, str):
+                    existing = [existing]
+                if domain_name not in existing:
+                    existing.append(domain_name)
+                G[u][v]["domains"] = existing
+                # Sum weights
+                G[u][v]["weight"] += data.get("weight", 0)
+            else:
+                G.add_edge(u, v, **data, domain=domain_name)
+
+    # Identify shared entities
+    all_nodes = set()
+    shared_entities = set()
+    for domain_name, nodes in domain_nodes.items():
+        for node in nodes:
+            if node in all_nodes:
+                shared_entities.add(node)
+            all_nodes.add(node)
+
+    # Mark shared entities
+    for node in shared_entities:
+        G.nodes[node]["is_shared"] = True
+        if len(G.nodes[node].get("domains", [])) >= 2:
+            G.nodes[node]["is_potential_shell"] = True
+
+    # Detect cycles in super-graph
+    cycles = detect_cycles(G)
+
+    # Emit super-graph receipt
+    emit_super_graph_receipt(
+        domains=list(domain_graphs.keys()),
+        total_nodes=G.number_of_nodes(),
+        total_edges=G.number_of_edges(),
+        shared_entities=len(shared_entities),
+        cycles_detected=len(cycles),
+    )
+
+    # Store metadata
+    G.graph["domains"] = list(domain_graphs.keys())
+    G.graph["shared_entities"] = list(shared_entities)
+    G.graph["cycles"] = cycles
+
+    return G
 
 
 # === STOPRULES ===
