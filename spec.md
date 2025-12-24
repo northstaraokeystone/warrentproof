@@ -2,6 +2,8 @@
 
 **Last Modified:** 2024-12-24
 
+**Version:** 6.1.0
+
 **SIMULATION FOR RESEARCH PURPOSES ONLY**
 
 ---
@@ -47,6 +49,38 @@ Gov-OS detects government fraud by measuring data complexity.
 
 ---
 
+## DOGE Claim Validation (v6.1)
+
+**"Receipts for DOGE"** — Cryptographic validation of efficiency claims using real USASpending data.
+
+### Claim Sources
+
+| Claim ID | Amount | Categories | Source |
+|----------|--------|------------|--------|
+| `160B_savings_2025` | $160B | medicaid, real_estate, dod | Musk X post, Nov 2024 |
+| `100B_medicaid_2024` | $100B | medicaid | GAO High-Risk Series |
+| `7B_real_estate_2024` | $7.4B | real_estate | GSA Profile 2024 |
+
+### Fraud Targets
+
+| Target | Annual Exposure | Cohort | Source |
+|--------|-----------------|--------|--------|
+| Medicaid improper payments | $100B | `doge_medicaid` | GAO-24-106541 |
+| Federal real estate waste | $7.4B | `federal_real_estate` | GSA 2024 |
+| DoD sole-source overpricing | $5B | `dod_transdigm` | DoD IG 2024 |
+| Navy husbanding fraud | $500M | `fat_leonard` | DOJ prosecution |
+
+### Validation Function
+
+```python
+from modules.doge.verify import validate_doge_claim
+
+result = validate_doge_claim("160B_savings_2025")
+# Returns: claimed_amount, verified_amount, delta_percent, passed
+```
+
+---
+
 ## Key Capabilities
 
 ### Cross-Domain Fraud Detection
@@ -59,6 +93,25 @@ Every action produces a cryptographic receipt. Receipts are batched into Merkle 
 
 ### Zero-Knowledge Privacy
 Modules handling personal data (Claim, Benefit) use ZK proofs. Verify fraud without exposing individual records.
+
+### ZK Configuration by Module (v6.1)
+
+| Module | ZK_ENABLED | Reason |
+|--------|------------|--------|
+| claim | **True** | Contains claimant PII |
+| benefit | **True** | Contains beneficiary PII |
+| doge | False | Public spending data |
+| spend | False | Public spending data |
+| green | False | Environmental data |
+| vote | False | Anonymized by design |
+| safety | False | Aggregate data |
+| coin | False | Public blockchain data |
+| origin | False | Supply chain metadata |
+| graft | False | Public corruption data |
+| warrant | False | Public warrant data |
+| lab | False | Research data |
+
+**v6.1 Change:** ZK is now opt-in. Default OFF reduces computation cost. Only PII modules require ZK.
 
 ### Self-Improvement Loop
 System monitors its own detection patterns. Learns from manual interventions. Proposes automation. Human-in-the-loop approval for high-risk actions.
@@ -188,10 +241,39 @@ gov-os/
 ├── spec.md                             # This specification
 ├── ledger_schema.json                  # Receipt type definitions
 ├── gate.sh                             # Execution gate runner
+├── CHANGELOG.md                        # Version history (v6.1)
+│
+├── config/                             # v6.1: CONFIGURATION FILES
+│   ├── compression_params.yaml         # Domain-specific thresholds
+│   └── module_defaults.yaml            # Module ZK settings
+│
+├── data/                               # v6.1: DATA COHORTS
+│   └── usaspending_cohorts.json        # Real data cohort definitions
+│
+├── docs/
+│   └── archive/                        # v6.1: Archived content
+│       └── physics_analogies.md        # Bekenstein metaphor (archived)
+│
+├── modules/                            # v6.1: TOP-LEVEL MODULES
+│   ├── doge/                           # DOGEProof (P0) - validate_doge_claim()
+│   │   ├── config.py                   # DOGE_CLAIM_SOURCES, ZK_ENABLED=False
+│   │   └── verify.py                   # validate_doge_claim() function
+│   ├── spend/                          # SpendProof (P0)
+│   ├── green/                          # GreenProof (P0)
+│   ├── benefit/                        # BenefitProof (P0) - ZK_ENABLED=True
+│   ├── vote/                           # VoteProof (P1)
+│   ├── claim/                          # ClaimProof (P1) - ZK_ENABLED=True
+│   ├── safety/                         # SafetyProof (P1)
+│   ├── coin/                           # CoinProof (P1)
+│   ├── origin/                         # OriginProof (P1)
+│   ├── graft/                          # GraftProof (P1)
+│   ├── warrant/                        # WarrantProof (P1)
+│   └── lab/                            # LabProof (P2)
 │
 ├── src/
 │   ├── core/                           # SHARED INFRASTRUCTURE
-│   │   ├── constants.py                # Universal constants
+│   │   ├── constants.py                # v6.1: load_threshold(), dynamic thresholds
+│   │   ├── data_gate.py                # v6.1: RealDataGate (wraps usaspending_etl)
 │   │   ├── receipt.py                  # All receipt types
 │   │   ├── ledger.py                   # Receipts storage, Merkle batching
 │   │   ├── anchor.py                   # Dual-hash (SHA256:BLAKE3)
@@ -204,19 +286,7 @@ gov-os/
 │   │   ├── loop.py                     # LOOP self-improvement
 │   │   └── zk.py                       # ZK privacy layer
 │   │
-│   ├── modules/                        # DOMAIN MODULES
-│   │   ├── doge/                       # DOGEProof (P0)
-│   │   ├── spend/                      # SpendProof (P0)
-│   │   ├── green/                      # GreenProof (P0)
-│   │   ├── benefit/                    # BenefitProof (P0)
-│   │   ├── vote/                       # VoteProof (P1)
-│   │   ├── claim/                      # ClaimProof (P1)
-│   │   ├── safety/                     # SafetyProof (P1)
-│   │   ├── coin/                       # CoinProof (P1)
-│   │   ├── origin/                     # OriginProof (P1)
-│   │   ├── graft/                      # GraftProof (P1)
-│   │   ├── warrant/                    # WarrantProof (P1)
-│   │   └── lab/                        # LabProof (P2)
+│   ├── usaspending_etl.py              # USASpending API integration
 │   │
 │   └── shieldproof/                    # Defense contract accountability
 │       ├── core/                       # Constants, utils, receipt, ledger
@@ -242,11 +312,30 @@ gov-os/
 | GATE_T48H_SECONDS | 172800 | 48-hour finalization |
 | ENTROPY_FLOOR | 0.1 | Below = suspicious uniformity |
 | ENTROPY_CEILING | 0.85 | Above = suspicious chaos |
-| COMPRESSION_THRESHOLD | 0.75 | Minimum viable compression |
+| COMPRESSION_THRESHOLD | **config-loaded** | v6.1: Domain-specific (see below) |
 | ZK_CURVE | BN254 | Groth16 curve |
 | ANCHOR_BATCH_SIZE | 1000 | Receipts per Merkle batch |
 | CONTAGION_AMPLIFICATION | 1.22 | 22% sensitivity boost |
 | SHELL_OVERLAP_THRESHOLD | 0.05 | 5% overlap = shared shell |
+
+### Domain-Specific Thresholds (v6.1)
+
+Thresholds are now loaded from `config/compression_params.yaml`:
+
+| Domain | Threshold | Reason |
+|--------|-----------|--------|
+| `default` | 0.75 | Fallback for unknown domains |
+| `medicaid_claims` | 0.45 | Tight distribution, fraud stands out |
+| `dod_logistics` | 0.55 | High variance in sole-source contracts |
+| `federal_real_estate` | 0.60 | Moderate variance in occupancy |
+| `r_and_d_contracts` | 0.75 | Standard baseline |
+| `dod_shipbuilding` | 0.65 | High variance, long cycles |
+| `personnel` | 0.50 | Tight distribution |
+
+```python
+from src.core.constants import load_threshold
+threshold = load_threshold("medicaid_claims")  # Returns 0.45
+```
 
 ## Detection Thresholds
 
@@ -258,6 +347,9 @@ gov-os/
 | Evidence Freshness | > 90 days stale | < 30 days fresh |
 | Decay Resistance | > 1.5 anomaly | <= 1.0 |
 | Contagion Overlap | >= 5% shared | N/A |
+
+> **v6.1 Note:** Thresholds are domain-configurable via `config/compression_params.yaml`.
+> Default: 0.75 | medicaid: 0.45 | dod_logistics: 0.55 | real_estate: 0.60
 
 ## Core Formulas
 
@@ -326,12 +418,14 @@ Every module in `modules/` implements:
 - `MODULE_ID: str` — Unique identifier
 - `MODULE_PRIORITY: int` — 0=critical, 1=important, 2=enhancement
 - `RECEIPT_TYPES: list[str]` — Receipt types emitted
+- `ZK_ENABLED: bool` — v6.1: Whether ZK proofs required (True for PII modules)
 
 **ingest.py:**
 - `ingest(data: dict) → dict` — Ingest domain data, emit receipt
 
 **verify.py:**
 - `verify(claim: dict) → dict` — Verify claim, emit receipt
+- `validate_doge_claim(claim_id: str) → dict` — v6.1: DOGE module only
 
 **receipts.py:**
 - Receipt dataclasses with all fields
@@ -339,7 +433,7 @@ Every module in `modules/` implements:
 **scenario.py:**
 - `run_MODULE_scenario(scenario: str) → dict` — Run domain scenario
 
-## Receipt Types (82+)
+## Receipt Types (85+)
 
 **Core:** warrant, quality_attestation, milestone, cost_variance, anchor, detection, compression, lineage, bridge, simulation, anomaly, violation
 
@@ -352,6 +446,8 @@ Every module in `modules/` implements:
 **Temporal:** temporal_anomaly_receipt, zombie_receipt, contagion_receipt, super_graph_receipt, insight_receipt
 
 **Module-Specific:** doge_proof, qed_claim, disbursement_proof, audit_compress, green_proof, emissions_anchor, benefit_disburse, fraud_compress, vote_proof, tally_anchor, claim_proof, safety_proof, adverse_event, wallet_cluster, revenue_share, tier_auth, origin_chain, graft_proof, case_chain, warrant_proof, lab_proof
+
+**v6.1 Data Gate:** data_gate_ingest, threshold_calibration, data_gate, doge_validation
 
 **ShieldProof:** contract, milestone, payment, variance, dashboard, anchor, anomaly
 
@@ -404,6 +500,7 @@ gov-os export --scenario BASELINE
 # DOGE
 gov-os doge ingest --claim FILE
 gov-os doge verify --claim-id ID
+gov-os doge validate --claim-id 160B_savings_2025    # v6.1: Validate DOGE claim
 gov-os doge scenario BASELINE
 
 # Spend
